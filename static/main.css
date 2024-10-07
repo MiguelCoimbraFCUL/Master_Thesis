@@ -1,0 +1,66 @@
+/* static/styles.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 50px;
+}
+
+.search-container {
+    max-width: 600px;
+    margin: auto;
+
+}
+
+.search-form {
+    display: flex;
+    align-items: center; /* Align items vertically (same height) */
+    justify-content: space-between; /* Button will align to the right */
+    gap: 10px; /* Add some space between the input and button */
+}
+
+.search-form input {
+    flex: 1; /* Makes the input take the remaining space */
+    padding: 10px;
+    font-size: 16px;
+}
+
+.search-form .button {
+    background-color: #3b6000;
+    font-size: 16px;
+    color: aliceblue;
+    cursor: pointer; 
+    outline: none;
+    float: right;
+    border: none;
+    padding: 10px 20px;
+}
+
+.button:hover{
+    background-color: #528600;
+}
+
+.button:active{
+    background-color: #3b6000;
+}
+
+.example-text{
+    font-size: 12px;
+    padding-top: 5px;
+    color: #949494;
+}
+
+
+
+input[type="text"] {
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+
+input[type="submit"]:hover {
+    background-color: #218838;
+}
+
