@@ -13,6 +13,8 @@ var netviz = {
 var node_search_data = null;
 var node_search_data_dict = null;
 var select = null;
+var selectedRanks = new Set();
+
 
 //format.extend (String.prototype, {});
 
@@ -56,10 +58,11 @@ $(document).ready(function() {
         }
     });
 
+
     // Event listener for the search button
     $('#searchButton').click(function(event) {
         event.preventDefault();  // Prevent the default form submission and page reload
-    
+        console.log('ranks', selectedRanks)
         const userInput = $('input[name="query"]').val().trim();
         const queryNodes = userInput.split(/\s+/);  // Split by space
         const validNodes = queryNodes.filter(node => node in node_search_data_dict);  // Check valid nodes
@@ -86,7 +89,9 @@ $(document).ready(function() {
           type: "POST",
           contentType: 'application/json; charset=utf-8',
           processData: false,
-          data: JSON.stringify({'nodes': validNodes}),
+          data: JSON.stringify({'nodes': validNodes,
+                                'ranks': Array.from(selectedRanks)  // Convert Set to Array before sending
+          }),
           success: function( data, textStatus, jQxhr ){
               netviz.isFrozen = false;
               drawNetwork(data);  // Visualize the network with the data returned
@@ -123,6 +128,8 @@ function drawNetwork(graphData){
     
     var options = {groups: graphData.groups,
                     interaction: {
+                        navigationButtons: true,
+                        keyboard: true,
                         hover: true,
                         multiselect:true,
                         
@@ -229,6 +236,7 @@ function postprocess_edge(item) {
     let footer = '</tbody>\
                   </table>';
     let data = [['irp_score', item.irp_score],
+                //['rank', item.rank],
                 ['EdgeBetweenness', item.EdgeBetweenness]];
 
     let table = '';
@@ -537,6 +545,15 @@ function initContextMenus() {
 
 }
 
+function toggleLegend() {
+    const legend = document.getElementById('legend');
+    if (legend.style.display === 'none' || legend.style.display === '') {
+        legend.style.display = 'block';
+    } else {
+        legend.style.display = 'none';
+    }
+}
+
 function format_cell(s){
     s = s.toString();
     s = s.trim();
@@ -546,4 +563,33 @@ function format_cell(s){
     }
     return s;
 }
+
+
+// Toggle dropdown visibility
+function toggleDropdown() {
+    document.getElementById("dropdownContent").classList.toggle("show");
+}
+
+function toggleRank(rank) {
+    if(selectedRanks.has(rank)) {
+        selectedRanks.delete(rank)
+    } else {
+        selectedRanks.add(rank);
+    }
+    console.log(Array.from(selectedRanks)) //so that can be printed
+}
+// filter page disappers if the click is not in the button or its components
+window.onclick = function(event) {
+    const dropdown = document.getElementById("dropdownContent");
+    const button = document.querySelector('.dropbtn');
+
+    // Check if the click was outside the dropdown and the button
+    if (!event.target.matches('.dropbtn') && !dropdown.contains(event.target)) {
+        if (dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show'); // Hide dropdown
+        }
+    }
+}
+
+
 

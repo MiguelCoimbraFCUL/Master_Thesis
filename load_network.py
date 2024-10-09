@@ -56,6 +56,7 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = True, directed =
                              data = [
                                  ('interaction', str),
                                  ('irp_score', float),
+                                 #('rank', int)
                                  ('EdgeBetweenness',float)
                              ])
 

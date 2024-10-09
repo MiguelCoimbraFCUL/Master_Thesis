@@ -1,13 +1,19 @@
 /* static/styles.css */
 body {
     font-family: Arial, sans-serif;
-    margin: 50px;
+    margin: 25px;
 }
 
+.container-fluid{
+    padding: 10px; 
+}
 .search-container {
     max-width: 600px;
     margin: auto;
-
+   
+}
+.search-container b{
+    color: #333333;
 }
 
 .search-form {
@@ -15,6 +21,9 @@ body {
     align-items: center; /* Align items vertically (same height) */
     justify-content: space-between; /* Button will align to the right */
     gap: 10px; /* Add some space between the input and button */
+}
+.searchbar{
+    min-width: 200px;
 }
 
 .search-form input {
@@ -47,6 +56,142 @@ body {
     padding-top: 5px;
     color: #949494;
 }
+/* filter */
+/* Dropdown button styling */
+.dropdown{
+    font-size: 10;
+}
+
+.btn-filter-image {
+    width: 15px;
+    float: inline-end;
+}
+
+.dropbtn {
+    background-color: #e9e9e9;
+    color: #333333;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4%;
+    width: 100%;
+    text-align: left;
+
+}
+
+/* Dropdown content (hidden by default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: 'white';
+    border: 1px solid #d0cece;
+    
+}
+
+/* Each selectable option (checkbox) */
+.option {
+    background-color: 'white';
+    color: #333333;
+    margin: 2px;
+    display: flex;
+    align-items: center;
+    padding-left: 15px;
+    padding-right: 15px;
+    cursor: pointer;
+}
+.option input{
+    margin-right: 15px;
+    cursor: pointer;
+
+}
+/* Show dropdown on button click */
+.show {
+    display: grid;
+}
+
+/* Option hover effect */
+.option:hover {
+    background-color: #e9e9e9;
+}
+
+/* legend */
+/* Button styling */
+.toggle-btn {
+    background-color: #e9e9e9;
+    font-size: 16px;
+    color: aliceblue;
+    cursor: pointer; 
+    outline: none;
+    border: none;
+    padding: 5px 5px;
+    border-radius: 50%;
+    margin-bottom: 10px;    
+}
+.button-image{
+    width: 40px;
+    height: 40px;
+    color: white;
+}
+.toggle-btn:hover {
+    background-color: #664704;
+}
+
+.legend {
+    margin-top: 10px; /* Ensures some space between the button and the legend */
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    width: 250px;
+    display: none; /* Initially hidden */
+    position: absolute;
+    z-index: 1000;
+}
+.legend-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #3b6000;
+}
+.legend-item-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+    font-size: 10px;
+}
+
+.legend-shape {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.circle-query {
+    border-radius: 50%;
+    background-color: #f09d62;
+    border: 1px solid #e3530b;
+}
+
+.circle {
+    border-radius: 50%;
+    background-color: #c7bba9;
+    border: 1px solid #a9a6a6;
+}
+.box {
+    background-color: #79e34e;
+    border: 1px solid #afaba2;
+}
+.box-tf {
+    background-color: #f5be15;
+    border: 1px solid #afaba2;
+}
+
 
 
 
@@ -63,4 +208,3 @@ input[type="text"] {
 input[type="submit"]:hover {
     background-color: #218838;
 }
-

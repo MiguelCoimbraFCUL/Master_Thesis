@@ -17,6 +17,16 @@ def remove_edges_for_display(g):
             remove_edge.append((s, t))
     g.remove_edges_from(remove_edge)
 
+def filter_ckn_edges(g,lRanksToKeep):
+    '''
+    list of integers
+    '''
+    initialEdgesN = g.number_of_edges()
+    if len(lRanksToKeep) == 0:
+        pass
+    else:
+        to_remove = [(u,v) for u, v, d in g.edges(data=True) if not (d["rank"] in lRanksToKeep)]
+        g.remove_edges_from(to_remove)
 
 
 def get_autocomplete_node_data(g):
@@ -142,6 +152,17 @@ def graph2json(g, query_nodes=[]):
         nodeData = copy.deepcopy(attrs)
         nodeData['id'] = nodeid
         nodeData['label'] = nodeid
+        
+        if nodeData['isTF'] == 1: #in case isTF
+            nodeData['color'] = {'border': '#afaba2',
+                                 'background': '#f5be15'}
+            nodeData['shape'] = 'box'
+        
+        elif nodeData['isTR'] == 1: #in case isTR
+            nodeData['color'] = {'border': '#afaba2',
+                                 'background': '#79e34e'}
+            nodeData['shape'] = 'box'
+        
         for key, value in nodeData.items():
             if isinstance(value, float) and math.isnan(value):
                 nodeData[key] = None  # Use None instead of null for JSON serialization

@@ -35,20 +35,84 @@
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js" integrity="sha512-iTgTmIgxyA2YehKNVbzLJx4j9SnuC5ihtRrtxVkXH/9nF3vXBN5YeNQp+6wufBWKD3u+roHVNOvWBMufQnBbug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- vis network -->
     <script src="https://cdn.jsdelivr.net/npm/verge@1.10.2/verge.min.js"></script> <!--verge-->
-    <div class="container-fluid">
-        <div class="search-container">
-            <h1><b>GENE SEARCH</b></h1>
-            <form class="search-form">
-                <input type="text" name="query" placeholder="Enter a node name term..." required>
-                <button class="button" id="searchButton">SEARCH</button>
-            </form>
-            <p class="example-text">ex: LOC112017778</p>
-        </div>
-        <div id="networkViewContainer">  
-            <div id="networkView"></div>
-        </div>
-    </div>
+    
+    <div class="container-fluid">  
+        <div class="row">
+            <div class="col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">  
+                <div class="search-container">         
+                    <h1><b>GENE SEARCH</b></h1>
+                    <form class="search-form">
+                        <input type="text" name="query" class="searchbar" placeholder="Enter a node name term..." required >
+                        <button class="button" id="searchButton">SEARCH</button>
+                        
+                    </form>
+                    <p class="example-text">ex: LOC112017778</p>
+                    <button class="toggle-btn" type="button" onclick="toggleLegend()">
+                        <img src="https://img.icons8.com/?size=100&id=77&format=png&color=000000" alt="Legend" class="button-image">
+                    </button>
+                    <!--LEGEND-->
+                    <div id="legend" class="legend">
+                        <div class="legend-title">NETWORK LEGEND</div>
+                        <div class="legend-item-title">
+                            <span>NODES</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shape circle-query"></div>
+                            <span> Node Searched</span>
+                        </div>
 
+                        <div class="legend-item">
+                            <div class="legend-shape circle"></div>
+                            <span> Regular Nodes</span>
+                        </div>
+                        
+                        <div class="legend-item">
+                            <div class="legend-shape box-tf"></div>
+                            <span>Transcription Factors</span>
+                        </div>
+                        
+                        <div class="legend-item">
+                            <div class="legend-shape box"></div>
+                            <span>Transcription Regulators</span>
+                        </div>
+                
+                    </div>
+                </div>
+                <!--filter-->
+                <div class="dropdown">
+                    <button class="dropbtn" onclick="toggleDropdown()">Filter<img src="https://img.icons8.com/?size=100&id=40021&format=png&color=000000" alt="filter" class="btn-filter-image"></button>
+                    <div id="dropdownContent" class="dropdown-content">
+                        <label class="option">
+                            <input type="checkbox" value="0" onclick="toggleRank(0)"> rank 0
+                        </label>
+                        <label class="option">
+                            <input type="checkbox" value="1" onclick="toggleRank(1)"> rank 1
+                        </label>
+                        <label class="option">
+                            <input type="checkbox" value="2" onclick="toggleRank(2)"> rank 2
+                        </label>
+                        <label class="option">
+                            <input type="checkbox" value="3" onclick="toggleRank(3)"> rank 3
+                        </label>
+                        <label class="option">
+                            <input type="checkbox" value="4" onclick="toggleRank(4)"> rank 4
+                        </label>
+                    </div>
+                </div>
+                 
+            </div>
+            <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9" id="networkViewContainer">  
+                <div id="networkView"></div>
+            </div> 
+        </div>
+        
+        
+
+
+    </div>
+    
+    
+    
 </body>
 </html>
 

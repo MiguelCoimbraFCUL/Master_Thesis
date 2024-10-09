@@ -8,6 +8,7 @@ from flask_cors import CORS, cross_origin
 
 
 
+
 base_dir = Path('../')
 data_dir = base_dir / 'data'
 
@@ -58,18 +59,20 @@ def search():
         if not data or 'nodes' not in data:
             return {'error': 'No nodes provided.'}, 400
         
-        query_nodes = set(data['nodes'])
+        query_nodes = set(data['nodes']) # validNodes
+        ranks = list(data['ranks'])
+        
         print('query_nodes', query_nodes)
         
         # Check for valid nodes in the graph
         valid_nodes = query_nodes.intersection(set(ckn.graph.nodes()))
         valid_nodes = list(valid_nodes)
-        print('valid_nodes', valid_nodes)
 
         if not valid_nodes:
             return {'error': 'No valid nodes found.'}, 400
         # If valid nodes exist, extract the subgraph
         subgraph = extract_shortest_paths(ckn.graph, valid_nodes)
+        #filter_ckn_edges(subgraph, ranks)
         return graph2json(subgraph, valid_nodes)
 
     except Exception as e:
@@ -99,6 +102,7 @@ def expand():
                         'interaction': attrs['interaction'],
                         'irp_score': attrs['irp_score'],
                         'EdgeBetweenness': attrs['EdgeBetweenness']
+                        #'rank': attrs['rank]
                         })
     json_data = graph2json(subgraph)
     json_data['network']['potential_edges'] = elist
