@@ -236,6 +236,7 @@ function postprocess_edge(item) {
     let footer = '</tbody>\
                   </table>';
     let data = [['irp_score', item.irp_score],
+                ['irp_score', item.irp_score],
                 //['rank', item.rank],
                 ['EdgeBetweenness', item.EdgeBetweenness]];
 

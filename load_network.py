@@ -6,7 +6,7 @@ import math
 from load_network_utils import detect_delimiter, detect_delimiter_compressed
 
 
-def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = True, directed = False):
+def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed = False):
     '''
     Requires: 1st line of edgesFile must be the header
     csv
@@ -52,7 +52,7 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = True, directed =
         handle.readline()
         g = nx.read_edgelist(handle,
                              delimiter = delimiter,
-                             create_using = nx.DiGraph(),
+                             create_using = nx.Graph(),
                              data = [
                                  ('interaction', str),
                                  ('irp_score', float),
@@ -67,6 +67,7 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = True, directed =
     else:
         delimiter = detect_delimiter(nodesPath)
         node_df = pd.read_csv(nodePath, na_values = ['','null','NaN'], keep_default_na = False, sep = delimiter)
+        
     
     
     
@@ -84,21 +85,34 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = True, directed =
     nx.set_node_attributes(g, node_df.to_dict('index'))
     
     #way of stripping tring types information
+    #create ranks for co-expression (irp score) 
+    co_exp_rank_thresholds = {
+    0.2: 4,
+    0.4: 3,
+    0.6: 2,
+    0.8: 1,
+    1.0: 0
+    }
+    
     for source, target, data in g.edges(data=True):
         if 'interaction' in data:
             data['interaction'] = data['interaction'].strip('"')
-        
-    #way i found to strip the nodes after the graph is already created
+        if 'irp_score' in data:
+            for threshold, co_exp_rank in co_exp_rank_thresholds.items():
+                if data['irp_score'] <= threshold:
+                    g[source][target]['co_exp_rank'] = co_exp_rank
+                    break
+
+
     
-
-
-        
+ 
     if add_reciprocal_edges:
         edges_to_add = []
         for source, target, data in g.edges(data=True):
             if(data['interaction'] == 'interacts with') and (not g.has_edge(target,source)): #will add the opposite since these edges are undirected, when True
                 edges_to_add.append((target, source, data))
         g.add_edges_from(edges_to_add) 
+    
 
 
 

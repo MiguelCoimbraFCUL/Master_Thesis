@@ -17,16 +17,16 @@ def remove_edges_for_display(g):
             remove_edge.append((s, t))
     g.remove_edges_from(remove_edge)
 
-def filter_ckn_edges(g,lRanksToKeep):
+def filter_ckn_edges(g,l_co_exp_RanksToKeep):
     '''
     list of integers
     '''
-    initialEdgesN = g.number_of_edges()
-    if len(lRanksToKeep) == 0:
+    if len(l_co_exp_RanksToKeep) == 0:
         pass
     else:
-        to_remove = [(u,v) for u, v, d in g.edges(data=True) if not (d["rank"] in lRanksToKeep)]
+        to_remove = [(u,v) for u, v, d in g.edges(data=True) if not (d["co_exp_rank"] in l_co_exp_RanksToKeep)]
         g.remove_edges_from(to_remove)
+    
 
 
 def get_autocomplete_node_data(g):
@@ -176,16 +176,37 @@ def graph2json(g, query_nodes=[]):
         nlist.append(nodeData)
 
     elist = []
-    
+    edgeWidthDict = {
+    0: 15,
+    1: 12,
+    2: 9,
+    3: 6,
+    4: 3,
+    }
+
+    for fr, to, attrs in g.edges(data=True):
+        attrs['id'] = fr + ' interacts with ' + to
+        if 'co_exp_rank' in attrs:
+            for co_exp_rank, width in edgeWidthDict.items():    
+                if attrs['co_exp_rank'] == co_exp_rank:
+                    attrs['width'] = width
+                    break
+                    
+   
+        
     for fr, to, attrs in g.edges(data=True):
         elist.append({'from': fr,
                       'to': to,
+                      'id': attrs['id'],
                       'label': attrs['interaction'],
                       'interaction': attrs['interaction'],
                       'irp_score': attrs['irp_score'],
                       'EdgeBetweenness': attrs['EdgeBetweenness'],
+                      'co_exp_rank': attrs['co_exp_rank'],
+                      'width': attrs['width'],
                       'arrows': {'to': {'enabled': True}} if attrs['interaction'] != 'interacts with' else {'to': {'enabled': False}}
                       })
+    
     result =  {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}
     return result
 

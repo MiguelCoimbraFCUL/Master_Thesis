@@ -12,8 +12,7 @@ from flask_cors import CORS, cross_origin
 base_dir = Path('../')
 data_dir = base_dir / 'data'
 
-
-
+#ckn_edge_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultEdgeWRanks_Direction.csv'
 ckn_edge_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultEdge.csv'
 ckn_node_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultNode3Transformed.csv'
 
@@ -34,6 +33,7 @@ ckn = CKN()
 
 app = Flask(__name__)
 CORS(app)
+
 
 
 @app.route('/')
@@ -60,7 +60,7 @@ def search():
             return {'error': 'No nodes provided.'}, 400
         
         query_nodes = set(data['nodes']) # validNodes
-        ranks = list(data['ranks'])
+        co_exp_ranks = list(data['ranks'])
         
         print('query_nodes', query_nodes)
         
@@ -72,7 +72,7 @@ def search():
             return {'error': 'No valid nodes found.'}, 400
         # If valid nodes exist, extract the subgraph
         subgraph = extract_shortest_paths(ckn.graph, valid_nodes)
-        #filter_ckn_edges(subgraph, ranks)
+        filter_ckn_edges(subgraph, co_exp_ranks)
         return graph2json(subgraph, valid_nodes)
 
     except Exception as e:
