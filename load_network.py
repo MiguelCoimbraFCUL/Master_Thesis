@@ -56,7 +56,8 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
                              data = [
                                  ('interaction', str),
                                  ('irp_score', float),
-                                 #('rank', int)
+                                 #('ConnectTF_Target', str),
+                                 #('cis_elements', int),
                                  ('EdgeBetweenness',float)
                              ])
 
@@ -85,7 +86,7 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
     nx.set_node_attributes(g, node_df.to_dict('index'))
     
     #way of stripping tring types information
-    #create ranks for co-expression (irp score) 
+    #create interval ranks for co-expression (irp score) 
     co_exp_rank_thresholds = {
     0.2: 4,
     0.4: 3,
@@ -102,10 +103,8 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
                 if data['irp_score'] <= threshold:
                     g[source][target]['co_exp_rank'] = co_exp_rank
                     break
+                
 
-
-    
- 
     if add_reciprocal_edges:
         edges_to_add = []
         for source, target, data in g.edges(data=True):

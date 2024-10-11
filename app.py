@@ -12,7 +12,6 @@ from flask_cors import CORS, cross_origin
 base_dir = Path('../')
 data_dir = base_dir / 'data'
 
-#ckn_edge_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultEdgeWRanks_Direction.csv'
 ckn_edge_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultEdge.csv'
 ckn_node_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultNode3Transformed.csv'
 
@@ -61,6 +60,7 @@ def search():
         
         query_nodes = set(data['nodes']) # validNodes
         co_exp_ranks = list(data['ranks'])
+        slideRange_co_exp = data['rangeSliderValue']
         
         print('query_nodes', query_nodes)
         
@@ -72,7 +72,7 @@ def search():
             return {'error': 'No valid nodes found.'}, 400
         # If valid nodes exist, extract the subgraph
         subgraph = extract_shortest_paths(ckn.graph, valid_nodes)
-        filter_ckn_edges(subgraph, co_exp_ranks)
+        filter_ckn_co_exp(subgraph, co_exp_ranks, valid_nodes, slideRange_co_exp)
         return graph2json(subgraph, valid_nodes)
 
     except Exception as e:
@@ -100,7 +100,7 @@ def expand():
                         'to': to,
                         'label': attrs['interaction'],
                         'interaction': attrs['interaction'],
-                        'irp_score': attrs['irp_score'],
+                        'irp_score': attrs['irp_score'],                   
                         'EdgeBetweenness': attrs['EdgeBetweenness']
                         #'rank': attrs['rank]
                         })

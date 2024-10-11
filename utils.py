@@ -17,16 +17,52 @@ def remove_edges_for_display(g):
             remove_edge.append((s, t))
     g.remove_edges_from(remove_edge)
 
-def filter_ckn_edges(g,l_co_exp_RanksToKeep):
+def filter_ckn_co_exp(g,l_co_exp_RanksToKeep, query_nodes, rangeSlider_co_exp):
     '''
     list of integers
     '''
-    if len(l_co_exp_RanksToKeep) == 0:
+    '''if len(l_co_exp_RanksToKeep) == 0:
         pass
     else:
-        to_remove = [(u,v) for u, v, d in g.edges(data=True) if not (d["co_exp_rank"] in l_co_exp_RanksToKeep)]
-        g.remove_edges_from(to_remove)
-    
+        to_remove_e = []
+        for s, t, d in g.edges(data=True):
+            if d["co_exp_rank"] not in l_co_exp_RanksToKeep:
+                to_remove_e.append((s, t))
+        g.remove_edges_from(set(to_remove_e))
+
+        to_remove_n = set()  # Set to hold nodes to be removed
+
+        for node in g.nodes():
+            # Skip query nodes
+            if node in query_nodes:
+                continue
+            
+            # Check if there is a path to any query node
+            is_connected = any(nx.has_path(g, query_node, node) for query_node in query_nodes)
+            if not is_connected:
+                to_remove_n.add(node)
+        g.remove_nodes_from(to_remove_n)''' 
+
+    to_remove_e = []
+    for s, t, d in g.edges(data=True):
+        if d["irp_score"] < rangeSlider_co_exp:
+            to_remove_e.append((s, t))
+    g.remove_edges_from(set(to_remove_e))
+
+    to_remove_n = set()  # Set to hold nodes to be removed
+
+    for node in g.nodes():
+        # Skip query nodes
+        if node in query_nodes:
+            continue
+        
+        # Check if there is a path to any query node
+        is_connected = any(nx.has_path(g, query_node, node) for query_node in query_nodes)
+        if not is_connected:
+            to_remove_n.add(node)
+    g.remove_nodes_from(to_remove_n)
+
+
 
 
 def get_autocomplete_node_data(g):
@@ -144,7 +180,7 @@ def expand_nodes(g, nodes, all_shown_nodes):
     potentialEdges = g.subgraph(all_neighbours).edges(data=True)
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
 
-def graph2json(g, query_nodes=[]):
+def graph2json(g, query_nodes=[], min_width = 1, max_width = 25):
     groups_json = {'CKN node': {'shape': 'box',
                               'color': {'background': 'white'}}}
     nlist = []
@@ -176,10 +212,11 @@ def graph2json(g, query_nodes=[]):
         nlist.append(nodeData)
 
     elist = []
-    edgeWidthDict = {
-    0: 15,
-    1: 12,
-    2: 9,
+    #RANK CO_EXP STILL
+    '''edgeWidthDict = {
+    0: 20,
+    1: 15,
+    2: 10,
     3: 6,
     4: 3,
     }
@@ -190,8 +227,14 @@ def graph2json(g, query_nodes=[]):
             for co_exp_rank, width in edgeWidthDict.items():    
                 if attrs['co_exp_rank'] == co_exp_rank:
                     attrs['width'] = width
-                    break
-                    
+                    break'''
+    for fr, to, attrs in g.edges(data=True):
+        attrs['id'] = fr + ' interacts with ' + to
+        if 'irp_score' in attrs:
+            width = min_width + (float(attrs['irp_score']) * (max_width - min_width))
+            attrs['width'] = width
+
+
    
         
     for fr, to, attrs in g.edges(data=True):

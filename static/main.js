@@ -14,6 +14,7 @@ var node_search_data = null;
 var node_search_data_dict = null;
 var select = null;
 var selectedRanks = new Set();
+var rangeSliderValue = 0
 
 
 //format.extend (String.prototype, {});
@@ -90,7 +91,9 @@ $(document).ready(function() {
           contentType: 'application/json; charset=utf-8',
           processData: false,
           data: JSON.stringify({'nodes': validNodes,
-                                'ranks': Array.from(selectedRanks)  // Convert Set to Array before sending
+                                'ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
+                                'rangeSliderValue': parseFloat(rangeSliderValue)
+
           }),
           success: function( data, textStatus, jQxhr ){
               netviz.isFrozen = false;
@@ -235,10 +238,11 @@ function postprocess_edge(item) {
                   <tbody>';
     let footer = '</tbody>\
                   </table>';
-    let data = [['irp_score', item.irp_score],
+    let data = [['id', item.id],
                 ['irp_score', item.irp_score],
-                //['rank', item.rank],
-                ['EdgeBetweenness', item.EdgeBetweenness]];
+                ['co_expression_rank', item.co_exp_rank],
+                ['EdgeBetweenness', item.EdgeBetweenness],
+            ];
 
     let table = '';
     data.forEach(function (item, index) {
@@ -579,6 +583,23 @@ function toggleRank(rank) {
     }
     console.log(Array.from(selectedRanks)) //so that can be printed
 }
+
+//range slider
+function updateRangeValue(value) {
+    document.getElementById('rangeValue').textContent = parseFloat(value).toFixed(3); //3 decimal digits, always
+}
+
+// Function to filter elements based on the selected IRP score
+function filterByIrpScore(minIrpScore = 0) {
+    console.log("Filtering edges with IRP Score >= " + minIrpScore);
+    rangeSliderValue = minIrpScore
+}
+
+
+
+
+
+/*
 // filter page disappers if the click is not in the button or its components
 window.onclick = function(event) {
     const dropdown = document.getElementById("dropdownContent");
@@ -591,6 +612,6 @@ window.onclick = function(event) {
         }
     }
 }
-
+*/
 
 

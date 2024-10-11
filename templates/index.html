@@ -100,6 +100,11 @@
                         </label>
                     </div>
                 </div>
+                <div class="slider-container">
+                    <label for="irpScoreRange">Minimum IRP Score:</label>
+                    <input type="range" id="irpScoreRange" min="0" max="1" step="0.001" value="0" oninput="updateRangeValue(this.value)" onchange="filterByIrpScore(this.value)">
+                    <span id="rangeValue">0.000</span>
+                </div>
                  
             </div>
             <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9" id="networkViewContainer">  
