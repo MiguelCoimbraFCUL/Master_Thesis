@@ -12,8 +12,8 @@ from flask_cors import CORS, cross_origin
 base_dir = Path('../')
 data_dir = base_dir / 'data'
 
-ckn_edge_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultEdge.csv'
-ckn_node_path = data_dir / 'startingFiles/GCN36_TPM_webapp_defaultNode3Transformed.csv'
+ckn_edge_path = data_dir / 'updatedData/Clean_DEG_GCN36_TPM_phellem1defaultedge.csv'
+ckn_node_path = data_dir / 'updatedData/Clean_DEG_GCN36_TPM_phellem1defaultnode.csv'
 
 class CKN(object):
     def __init__(self):

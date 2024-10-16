@@ -6,7 +6,7 @@ import math
 from load_network_utils import detect_delimiter, detect_delimiter_compressed
 
 
-def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed = False):
+def ckn_to_networkx(edgesPath, nodePath):
     '''
     Requires: 1st line of edgesFile must be the header
     csv
@@ -52,13 +52,13 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
         handle.readline()
         g = nx.read_edgelist(handle,
                              delimiter = delimiter,
-                             create_using = nx.Graph(),
+                             create_using = nx.MultiGraph(),
                              data = [
+                                 ('ConnecTF_Target', str),
+                                 ('EdgeBetweenness',float),
                                  ('interaction', str),
                                  ('irp_score', float),
-                                 #('ConnectTF_Target', str),
-                                 #('cis_elements', int),
-                                 ('EdgeBetweenness',float)
+                                 ('cis_elements', int)                       
                              ])
 
 
@@ -72,7 +72,7 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
     
     
     
-    
+    node_df.columns = node_df.columns.str.strip() #stripping the header from spaces
     mapping = {}
     for node, attrs in g.nodes(data=True):
         nodeS = node.strip('"')
@@ -85,26 +85,75 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
     #turn db into a dict where the keys are the names and the values are the rest of the information
     nx.set_node_attributes(g, node_df.to_dict('index'))
     
-    #way of stripping tring types information
-    #create interval ranks for co-expression (irp score) 
-    co_exp_rank_thresholds = {
-    0.2: 4,
-    0.4: 3,
-    0.6: 2,
-    0.8: 1,
-    1.0: 0
-    }
     
+    edges_to_add = []
+    edges_to_remove = []
     for source, target, data in g.edges(data=True):
+
+        #stripping interaction data
         if 'interaction' in data:
             data['interaction'] = data['interaction'].strip('"')
-        if 'irp_score' in data:
-            for threshold, co_exp_rank in co_exp_rank_thresholds.items():
-                if data['irp_score'] <= threshold:
-                    g[source][target]['co_exp_rank'] = co_exp_rank
-                    break
-                
 
+        data['directed'] = 'no'
+        data['id'] = f'{source} interacts with {target}'
+        data['arrows'] = 'undefined'
+        
+        #tfRank
+        if data['ConnecTF_Target'] == 'no' and data['cis_elements'] == 0:
+            tf_rank = 0
+            data['tf_rank'] = tf_rank
+        elif data['ConnecTF_Target'] == 'no' and data['cis_elements'] != 0:
+            tf_rank = 1
+            data['tf_rank'] = tf_rank
+        elif data['ConnecTF_Target'] != 'no' and data['cis_elements'] != 0:
+            tf_rank = 2
+            data['tf_rank'] = tf_rank
+      
+        #create the direct edges 
+        
+        if tf_rank == 1 or tf_rank == 2:
+            edges_to_add.append((source, target, dict(data)))
+
+    #need new cicle so that im not changing the structure of the graph during the cycle above:RuntimeError: dictionary changed size during iteration
+    for source, target, data in edges_to_add:
+        g.add_edge(source, target, key='directed', **data)
+
+
+        #check which of the nodes is the TF. If none delete the edge
+        source_is_tf = 'isTF' in g.nodes[source] and g.nodes[source]['isTF'] == 'TF'
+        target_is_tf = 'isTF' in g.nodes[target] and g.nodes[target]['isTF'] == 'TF'
+        if source_is_tf and not target_is_tf:
+            g[source][target]['directed']['id'] = f'{source} modulates the expression of {target}'
+            g[source][target]['directed']['arrows'] = {'to': {'enabled': True}}  # Arrow towards target (non-TF)
+        
+        # Case 2: Target is TF, Source is not
+        elif target_is_tf and not source_is_tf:
+            g[target][source]['directed']['id'] = f'{target} modulates the expression of {source}'
+            g[target][source]['directed']['arrows'] = {'from': {'enabled': True}}  # Arrow towards source (non-TF)
+
+        # Case 3: Both Source and Target are TFs
+        elif source_is_tf and target_is_tf:
+            g[source][target]['directed']['id'] = f'{source} and {target} modulate each other'
+            g[source][target]['directed']['arrows'] = {'to': {'enabled': True}, 'from': {'enabled': True}}
+        else:
+            edges_to_remove.append((source,target,'directed'))
+
+        g[target][source]['directed']['directed'] = 'yes'
+        g[target][source]['directed']['interaction'] = 'regulates expression'
+        g[target][source]['directed']['tf_rank'] = tf_rank
+
+    #removing
+    for source, target, key in edges_to_remove:
+        g.remove_edge(source, target, key=key)
+    print('nmr of directed edges', len(edges_to_add))
+        
+
+        
+    
+    
+
+    '''           
+    REVER SE FAZ SENTIDO TER ISTO
     if add_reciprocal_edges:
         edges_to_add = []
         for source, target, data in g.edges(data=True):
@@ -117,12 +166,13 @@ def ckn_to_networkx(edgesPath, nodePath, add_reciprocal_edges = False, directed 
 
     # directed == True when i just want direct edges
     if directed:
-        to_remove = [(source,target) for source, taget, data in g.edges(data = True) if data['interaction'] == 'interacts with']
+        to_remove = [(source,target) for source, target, data in g.edges(data = True) if data['interaction'] == 'interacts with']
         g.remove_edges_from(to_remove)
 
         # remove isolates resulting from filtering
         isolates = list(nx.isolates(g))
-        g.remove_nodes_from(isolates)
+        g.remove_nodes_from(isolates)'''
+    
 
     
     

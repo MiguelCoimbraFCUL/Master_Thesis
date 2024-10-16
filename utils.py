@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import copy
 import networkx as nx
 
-def remove_edges_for_display(g):
+'''def remove_edges_for_display(g):
     remove_edge = []
     checked_edges = set()
     for s, t in g.edges():
@@ -15,9 +15,9 @@ def remove_edges_for_display(g):
             checked_edges.add((s, t))
         else:
             remove_edge.append((s, t))
-    g.remove_edges_from(remove_edge)
+    g.remove_edges_from(remove_edge)'''
 
-def filter_ckn_co_exp(g,l_co_exp_RanksToKeep, query_nodes, rangeSlider_co_exp):
+def filter_ckn_co_exp(g,tf_ranks, query_nodes, rangeSlider_co_exp):
     '''
     list of integers
     '''
@@ -180,7 +180,7 @@ def expand_nodes(g, nodes, all_shown_nodes):
     potentialEdges = g.subgraph(all_neighbours).edges(data=True)
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
 
-def graph2json(g, query_nodes=[], min_width = 1, max_width = 25):
+def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
     groups_json = {'CKN node': {'shape': 'box',
                               'color': {'background': 'white'}}}
     nlist = []
@@ -212,44 +212,51 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 25):
         nlist.append(nodeData)
 
     elist = []
-    #RANK CO_EXP STILL
-    '''edgeWidthDict = {
-    0: 20,
-    1: 15,
-    2: 10,
-    3: 6,
-    4: 3,
+    #dict tf_rank : edge width
+    tf_width_dict = {
+    0: 5,
+    1: 10,
+    2: 15,
     }
-
-    for fr, to, attrs in g.edges(data=True):
-        attrs['id'] = fr + ' interacts with ' + to
-        if 'co_exp_rank' in attrs:
-            for co_exp_rank, width in edgeWidthDict.items():    
-                if attrs['co_exp_rank'] == co_exp_rank:
-                    attrs['width'] = width
-                    break'''
-    for fr, to, attrs in g.edges(data=True):
-        attrs['id'] = fr + ' interacts with ' + to
-        if 'irp_score' in attrs:
+    
+    for fr, to, key, attrs in g.edges(keys=True, data=True):
+        
+        #co_exp edges
+        if key != 'directed':
+            #scaling the width by the irp_score in a defined interval
             width = min_width + (float(attrs['irp_score']) * (max_width - min_width))
             attrs['width'] = width
-
-
-   
         
+        #directed edges
+        #check which of the nodes is the TF
+        else:
+            #width of directed edges by the dict
+            if 'tf_rank' in attrs: 
+                print('passa aqui')  
+                tf_rank = attrs['tf_rank']
+                if tf_rank in tf_width_dict:
+                    attrs['width'] = tf_width_dict[tf_rank]
+            
+
+       
     for fr, to, attrs in g.edges(data=True):
         elist.append({'from': fr,
-                      'to': to,
-                      'id': attrs['id'],
-                      'label': attrs['interaction'],
-                      'interaction': attrs['interaction'],
-                      'irp_score': attrs['irp_score'],
-                      'EdgeBetweenness': attrs['EdgeBetweenness'],
-                      'co_exp_rank': attrs['co_exp_rank'],
-                      'width': attrs['width'],
-                      'arrows': {'to': {'enabled': True}} if attrs['interaction'] != 'interacts with' else {'to': {'enabled': False}}
-                      })
+                    'to': to,
+                    'id': attrs['id'],
+                    'label': attrs['interaction'],
+                    'interaction': attrs['interaction'],
+                    'irp_score': attrs['irp_score'],
+                    'EdgeBetweenness': attrs['EdgeBetweenness'],
+                    'ConnecTF_Target': attrs['ConnecTF_Target'],
+                    'cis_elements': attrs['cis_elements'],                      
+                    #'tf_rank': attrs['tf_rank'],
+                    'width': attrs['width'],
+                    'directed': attrs['directed'],
+                    'arrows': attrs['arrows']
+                    })
     
+
+        
     result =  {'network': {'nodes': nlist, 'edges': elist}, 'groups': groups_json}
     return result
 

@@ -138,7 +138,7 @@ function drawNetwork(graphData){
                         
                     },
                     edges: {
-                        arrows: 'to',
+                        //arrows: 'to',
                         smooth: {
                             enabled: true,
                             type: 'dynamic',
@@ -240,8 +240,11 @@ function postprocess_edge(item) {
                   </table>';
     let data = [['id', item.id],
                 ['irp_score', item.irp_score],
-                ['co_expression_rank', item.co_exp_rank],
                 ['EdgeBetweenness', item.EdgeBetweenness],
+                ['ConnectTF_Target', item.ConnectTF_Target],
+                ['cis_elements', item.cis_elements],
+                ['tf_rank', item.tf_rank],
+                ['directed', item.directed]
             ];
 
     let table = '';
@@ -257,6 +260,8 @@ function postprocess_edge(item) {
     table = header + table + footer;
     item.title = htmlTitle(table);
     return item;
+
+
 }
 
 
