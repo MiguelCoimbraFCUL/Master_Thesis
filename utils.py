@@ -17,17 +17,22 @@ import networkx as nx
             remove_edge.append((s, t))
     g.remove_edges_from(remove_edge)'''
 
-def filter_ckn_co_exp(g,tf_ranks, query_nodes, rangeSlider_co_exp):
+def filter_edges_nodes(g, query_nodes, tf_ranks, rangeSlider_co_exp):
     '''
     list of integers
     '''
-    '''if len(l_co_exp_RanksToKeep) == 0:
+    if len(tf_ranks) == 0:
         pass
     else:
         to_remove_e = []
-        for s, t, d in g.edges(data=True):
-            if d["co_exp_rank"] not in l_co_exp_RanksToKeep:
-                to_remove_e.append((s, t))
+        for s, t, k, d in g.edges(keys=True, data=True):  
+            if k == 'directed':  
+                if d['tf_rank'] not in tf_ranks:
+                    to_remove_e.append((s, t, k))
+            else:
+                if 0 not in tf_ranks:
+                    to_remove_e.append((s, t, k))
+
         g.remove_edges_from(set(to_remove_e))
 
         to_remove_n = set()  # Set to hold nodes to be removed
@@ -41,12 +46,14 @@ def filter_ckn_co_exp(g,tf_ranks, query_nodes, rangeSlider_co_exp):
             is_connected = any(nx.has_path(g, query_node, node) for query_node in query_nodes)
             if not is_connected:
                 to_remove_n.add(node)
-        g.remove_nodes_from(to_remove_n)''' 
+        g.remove_nodes_from(to_remove_n)
 
+    #range Slider
     to_remove_e = []
-    for s, t, d in g.edges(data=True):
-        if d["irp_score"] < rangeSlider_co_exp:
-            to_remove_e.append((s, t))
+    for s, t, k, d in g.edges(keys=True, data=True):
+        if k != 'directed':
+            if d["irp_score"] < rangeSlider_co_exp:
+                to_remove_e.append((s, t, k))
     g.remove_edges_from(set(to_remove_e))
 
     to_remove_n = set()  # Set to hold nodes to be removed
@@ -148,11 +155,11 @@ def extract_shortest_paths(g, query_nodes):
     return g.subgraph(paths_nodes).copy()
 
 
-def expand_nodes(g, nodes, all_shown_nodes):
+def expand_nodes(g, nodes, all_shown_nodes, tf_ranks, slideRange_co_exp):
     if len(nodes) > 1:
         print('Error : expand not implemented for more than one node')
     node = nodes[0]
-    ug = nx.Graph(g.copy())
+    ug = nx.MultiDiGraph(g.copy())
 
     # find also neighbours on the second level to connect to the rest of the graph (if possible)
     all_neighbours = set(nodes)
@@ -171,13 +178,14 @@ def expand_nodes(g, nodes, all_shown_nodes):
         if g.has_edge(fr, to):
             edges = g.get_edge_data(fr, to)
             for k in edges:
-                potentialEdges.append((fr, to, edges[k]))
+                potentialEdges.append((fr, to, k, edges[k]))
         elif g.has_edge(to, fr):
             edges = g.get_edge_data(to, fr)
             for k in edges:
-                potentialEdges.append((to, fr, edges[k]))
+                potentialEdges.append((to, fr, k, edges[k]))
 
-    potentialEdges = g.subgraph(all_neighbours).edges(data=True)
+    potentialEdges = g.subgraph(all_neighbours).edges(keys=True, data=True)
+    
     return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
 
 def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
@@ -214,15 +222,16 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
     elist = []
     #dict tf_rank : edge width
     tf_width_dict = {
-    0: 5,
-    1: 10,
-    2: 15,
+    0: 6,
+    1: 9,
+    2: 12,
+    3: 15
     }
     
     for fr, to, key, attrs in g.edges(keys=True, data=True):
         
         #co_exp edges
-        if key != 'directed':
+        if key != 'directed' and key != 'undirected_copy':
             #scaling the width by the irp_score in a defined interval
             width = min_width + (float(attrs['irp_score']) * (max_width - min_width))
             attrs['width'] = width
@@ -232,28 +241,41 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
         else:
             #width of directed edges by the dict
             if 'tf_rank' in attrs: 
-                print('passa aqui')  
                 tf_rank = attrs['tf_rank']
                 if tf_rank in tf_width_dict:
-                    attrs['width'] = tf_width_dict[tf_rank]
+                    attrs['width'] = tf_width_dict[tf_rank]       
             
-
-       
     for fr, to, attrs in g.edges(data=True):
-        elist.append({'from': fr,
+        '''elist.append({'from': fr,
                     'to': to,
                     'id': attrs['id'],
                     'label': attrs['interaction'],
                     'interaction': attrs['interaction'],
                     'irp_score': attrs['irp_score'],
-                    'EdgeBetweenness': attrs['EdgeBetweenness'],
                     'ConnecTF_Target': attrs['ConnecTF_Target'],
                     'cis_elements': attrs['cis_elements'],                      
-                    #'tf_rank': attrs['tf_rank'],
+                    'tf_rank': attrs['tf_rank'],
                     'width': attrs['width'],
                     'directed': attrs['directed'],
-                    'arrows': attrs['arrows']
-                    })
+                    'arrows': attrs['arrows'],
+                    'hidden': attrs['hidden']
+                    })'''
+        
+        elist.append({
+                    'from': fr,
+                    'to': to,
+                    'id': attrs.get('id', ''),
+                    'label': attrs.get('interaction', ''),
+                    'interaction': attrs.get('interaction', ''),
+                    'irp_score': attrs.get('irp_score', 0),
+                    'ConnecTF_Target': attrs.get('ConnecTF_Target', ''),
+                    'cis_elements': attrs.get('cis_elements', 0),
+                    'tf_rank': attrs.get('tf_rank', 0),  
+                    'width': attrs.get('width', 1),  
+                    'directed': attrs.get('directed', 'no'),
+                    'arrows': attrs.get('arrows', 'undefined'),
+                    'hidden': attrs.get('hidden', False) 
+                })
     
 
         

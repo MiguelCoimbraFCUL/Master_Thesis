@@ -52,7 +52,7 @@ def ckn_to_networkx(edgesPath, nodePath):
         handle.readline()
         g = nx.read_edgelist(handle,
                              delimiter = delimiter,
-                             create_using = nx.MultiGraph(),
+                             create_using = nx.MultiDiGraph(),
                              data = [
                                  ('ConnecTF_Target', str),
                                  ('EdgeBetweenness',float),
@@ -60,7 +60,6 @@ def ckn_to_networkx(edgesPath, nodePath):
                                  ('irp_score', float),
                                  ('cis_elements', int)                       
                              ])
-
 
     if nodesCompressed:
         delimiter = detect_delimiter_compressed(nodesPath)
@@ -86,7 +85,8 @@ def ckn_to_networkx(edgesPath, nodePath):
     nx.set_node_attributes(g, node_df.to_dict('index'))
     
     
-    edges_to_add = []
+    directed_edges_to_add = []
+    undirected_edges_to_add = []
     edges_to_remove = []
     for source, target, data in g.edges(data=True):
 
@@ -96,56 +96,77 @@ def ckn_to_networkx(edgesPath, nodePath):
 
         data['directed'] = 'no'
         data['id'] = f'{source} interacts with {target}'
-        data['arrows'] = 'undefined'
         
         #tfRank
+        # no no
         if data['ConnecTF_Target'] == 'no' and data['cis_elements'] == 0:
             tf_rank = 0
-            data['tf_rank'] = tf_rank
-        elif data['ConnecTF_Target'] == 'no' and data['cis_elements'] != 0:
+        # no yes
+        elif data['ConnecTF_Target'] == 'no' and data['cis_elements'] == 1:
             tf_rank = 1
-            data['tf_rank'] = tf_rank
-        elif data['ConnecTF_Target'] != 'no' and data['cis_elements'] != 0:
+        # yes no
+        elif data['ConnecTF_Target'] != 'no' and data['cis_elements'] == 0:
             tf_rank = 2
-            data['tf_rank'] = tf_rank
-      
-        #create the direct edges 
+        else: # yes yes
+            tf_rank = 3
+
+
+    
         
-        if tf_rank == 1 or tf_rank == 2:
-            edges_to_add.append((source, target, dict(data)))
+        #create duplicate edges
+        #add the direct edges to list
+        if tf_rank != 0:
+            key = 'directed'
+            directed_edges_to_add.append((source, target, key, dict(data), tf_rank))
+
+        #add the direct edges to list
+        else:
+            key = 'undirected_copy'
+            undirected_edges_to_add.append((target, source, key, dict(data)))
+
+
 
     #need new cicle so that im not changing the structure of the graph during the cycle above:RuntimeError: dictionary changed size during iteration
-    for source, target, data in edges_to_add:
-        g.add_edge(source, target, key='directed', **data)
+    for source, target, key, data, tf_rank in directed_edges_to_add:
+        g.add_edge(source, target, key, **data)
+
+        g[source][target][key]['directed'] = 'yes'
+        g[source][target][key]['interaction'] = 'regulates expression'
+        g[source][target][key]['tf_rank'] = tf_rank
 
 
+        #since using undirected edges need this treatment
         #check which of the nodes is the TF. If none delete the edge
         source_is_tf = 'isTF' in g.nodes[source] and g.nodes[source]['isTF'] == 'TF'
         target_is_tf = 'isTF' in g.nodes[target] and g.nodes[target]['isTF'] == 'TF'
         if source_is_tf and not target_is_tf:
-            g[source][target]['directed']['id'] = f'{source} modulates the expression of {target}'
-            g[source][target]['directed']['arrows'] = {'to': {'enabled': True}}  # Arrow towards target (non-TF)
-        
-        # Case 2: Target is TF, Source is not
-        elif target_is_tf and not source_is_tf:
-            g[target][source]['directed']['id'] = f'{target} modulates the expression of {source}'
-            g[target][source]['directed']['arrows'] = {'from': {'enabled': True}}  # Arrow towards source (non-TF)
-
-        # Case 3: Both Source and Target are TFs
-        elif source_is_tf and target_is_tf:
-            g[source][target]['directed']['id'] = f'{source} and {target} modulate each other'
-            g[source][target]['directed']['arrows'] = {'to': {'enabled': True}, 'from': {'enabled': True}}
+            g[source][target][key]['id'] = f'{source} modulates the expression of {target}'
+            g[source][target][key]['arrows'] = {'to': {'enabled': True}}  # Arrow towards target (non-TF)
+            ''' ver se faz sentido visto ser direto
+            # Case 2: Target is TF, Source is not
+            elif target_is_tf and not source_is_tf:
+                g[target][source][key]['id'] = f'{target} modulates the expression of {source}'
+                g[target][source][key]['arrows'] = {'from': {'enabled': True}}  # Arrow towards source (non-TF)
+            
+            # Case 3: Both Source and Target are TFs
+            elif source_is_tf and target_is_tf:
+                g[source][target][key]['id'] = f'{source} and {target} modulate each other'
+                g[source][target][key]['arrows'] = {'to': {'enabled': True}, 'from': {'enabled': True}}
+            '''
         else:
-            edges_to_remove.append((source,target,'directed'))
+            edges_to_remove.append((source, target, key))
 
-        g[target][source]['directed']['directed'] = 'yes'
-        g[target][source]['directed']['interaction'] = 'regulates expression'
-        g[target][source]['directed']['tf_rank'] = tf_rank
+        
 
     #removing
     for source, target, key in edges_to_remove:
         g.remove_edge(source, target, key=key)
-    print('nmr of directed edges', len(edges_to_add))
+    print('nmr of directed edges', len(directed_edges_to_add))
+
+    for target, source, key, data in undirected_edges_to_add:
+        g.add_edge(target, source, key, **data)
+        g[target][source][key]['hidden'] = True
+        g[target][source][key]['id'] = f'{target} interacts with {source}'
         
 
         
@@ -155,11 +176,11 @@ def ckn_to_networkx(edgesPath, nodePath):
     '''           
     REVER SE FAZ SENTIDO TER ISTO
     if add_reciprocal_edges:
-        edges_to_add = []
+        directed_edges_to_add = []
         for source, target, data in g.edges(data=True):
             if(data['interaction'] == 'interacts with') and (not g.has_edge(target,source)): #will add the opposite since these edges are undirected, when True
-                edges_to_add.append((target, source, data))
-        g.add_edges_from(edges_to_add) 
+                directed_edges_to_add.append((target, source, data))
+        g.add_edges_from(directed_edges_to_add) 
     
 
 
@@ -171,11 +192,7 @@ def ckn_to_networkx(edgesPath, nodePath):
 
         # remove isolates resulting from filtering
         isolates = list(nx.isolates(g))
-        g.remove_nodes_from(isolates)'''
-    
-
-    
-    
+        g.remove_nodes_from(isolates)'''    
     return g
 
 

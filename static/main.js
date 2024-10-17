@@ -202,6 +202,7 @@ function drawNetwork(graphData){
     };
     postprocess_edges(data.edges);
     postprocess_nodes(data.nodes);
+    console.log('edge items',data.edges)
 
     netviz.network = new vis.Network(container, data, options);
     netviz.network.on('dragStart', onDragStart);
@@ -234,19 +235,29 @@ function hover_node(values, id, selected, hovering) {
 function postprocess_edge(item) {
 
     let maxlen = 100;
-    let header = '<table class="table table-striped table-bordered tooltip_table">\
-                  <tbody>';
-    let footer = '</tbody>\
-                  </table>';
-    let data = [['id', item.id],
-                ['irp_score', item.irp_score],
-                ['EdgeBetweenness', item.EdgeBetweenness],
-                ['ConnectTF_Target', item.ConnectTF_Target],
-                ['cis_elements', item.cis_elements],
-                ['tf_rank', item.tf_rank],
-                ['directed', item.directed]
-            ];
+    let header = '<table class="table table-striped table-bordered tooltip_table"><tbody>';
+    let footer = '</tbody></table>';
 
+    let data = [];
+    if (item.hidden == true) {
+        data = [];  // If hidden, keep data empty
+    } else if (item.directed == 'yes') {
+        data = [
+            ['id', item.id],
+            ['ConnecTF_Target', item.ConnecTF_Target],
+            ['cis_elements', item.cis_elements],
+            ['tf_rank', item.tf_rank],
+            ['directed', item.directed]
+        ];
+    } else {
+        data = [
+            ['id', item.id],
+            ['irp_score', item.irp_score],
+            ['directed', item.directed]
+        ];
+    }
+
+    // Generate the table rows
     let table = '';
     data.forEach(function (item, index) {
         if (item[1] != null) {
@@ -287,8 +298,8 @@ function postprocess_node(node) {
                 ['homolog of Arabidopsis Concise', node.Arabidopsis_concise],
                 ['Eccentricity', node.Eccentricity],
                 ['BetweennessCentrality', node.BetweennessCentrality],
-                ['isTR', node.isTR === 1 ? 'True' : 'False'],
-                ['isTF', node.isTF === 1 ? 'True' : 'False']];
+                ['isTR', node.isTR == 'TR' ? 'True' : 'False'],
+                ['isTF', node.isTF == 'TF' ? 'True' : 'False']];
 
     let table = '';
     data.forEach(function (pair) {
@@ -385,7 +396,11 @@ function expandNode(nid) {
       type: "POST",
       contentType: 'application/json; charset=utf-8',
       processData: false,
-      data: JSON.stringify({'nodes': [nid], 'all_nodes': netviz.nodes.getIds()}),
+      data: JSON.stringify({'nodes': [nid], 
+                            'all_nodes': netviz.nodes.getIds(),
+                            'ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
+                            'rangeSliderValue': parseFloat(rangeSliderValue)
+                        }),
       success: function( data, textStatus, jQxhr ){
         console.log('expandnode data sent to app',data)
         if (data.error) {
@@ -400,7 +415,7 @@ function expandNode(nid) {
                 if (!netviz.nodes.get(item.id)) {
                     //netviz.nodes.add(postprocess_node(item));
                     postprocess_node(item);
-                    netviz.nodes.add(item)
+                    netviz.nodes.add(item);
                     newCounter += 1;
                 }
                 else {
