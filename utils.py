@@ -159,7 +159,7 @@ def expand_nodes(g, nodes, all_shown_nodes, tf_ranks, slideRange_co_exp):
     if len(nodes) > 1:
         print('Error : expand not implemented for more than one node')
     node = nodes[0]
-    ug = nx.MultiDiGraph(g.copy())
+    ug = nx.MultiGraph(g.copy())
 
     # find also neighbours on the second level to connect to the rest of the graph (if possible)
     all_neighbours = set(nodes)
@@ -213,9 +213,8 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
 
         if nodeid in query_nodes:
             nodeData['color'] = {'border': "#e3530b",
-                                 'background': '#f09d62',
-                                 'highlight': {'border': 'red'},  # this does not work, bug in vis.js
-                                 'hover': {'border': 'red'}}  # this does not work, bug in vis.js
+                                 'background': '#f09d62'
+                                } 
             nodeData['borderWidth'] = 2
         nlist.append(nodeData)
 
@@ -231,13 +230,12 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
     for fr, to, key, attrs in g.edges(keys=True, data=True):
         
         #co_exp edges
-        if key != 'directed' and key != 'undirected_copy':
+        if key != 'directed':
             #scaling the width by the irp_score in a defined interval
             width = min_width + (float(attrs['irp_score']) * (max_width - min_width))
             attrs['width'] = width
         
         #directed edges
-        #check which of the nodes is the TF
         else:
             #width of directed edges by the dict
             if 'tf_rank' in attrs: 
@@ -274,7 +272,7 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
                     'width': attrs.get('width', 1),  
                     'directed': attrs.get('directed', 'no'),
                     'arrows': attrs.get('arrows', 'undefined'),
-                    'hidden': attrs.get('hidden', False) 
+                    'hidden': attrs.get('hidden', False)
                 })
     
 

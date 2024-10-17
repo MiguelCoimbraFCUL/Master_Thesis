@@ -239,9 +239,7 @@ function postprocess_edge(item) {
     let footer = '</tbody></table>';
 
     let data = [];
-    if (item.hidden == true) {
-        data = [];  // If hidden, keep data empty
-    } else if (item.directed == 'yes') {
+    if (item.directed == 'yes') {
         data = [
             ['id', item.id],
             ['ConnecTF_Target', item.ConnecTF_Target],

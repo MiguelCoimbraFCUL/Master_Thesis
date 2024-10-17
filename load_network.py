@@ -52,7 +52,7 @@ def ckn_to_networkx(edgesPath, nodePath):
         handle.readline()
         g = nx.read_edgelist(handle,
                              delimiter = delimiter,
-                             create_using = nx.MultiDiGraph(),
+                             create_using = nx.MultiGraph(),
                              data = [
                                  ('ConnecTF_Target', str),
                                  ('EdgeBetweenness',float),
@@ -86,7 +86,6 @@ def ckn_to_networkx(edgesPath, nodePath):
     
     
     directed_edges_to_add = []
-    undirected_edges_to_add = []
     edges_to_remove = []
     for source, target, data in g.edges(data=True):
 
@@ -119,14 +118,7 @@ def ckn_to_networkx(edgesPath, nodePath):
             key = 'directed'
             directed_edges_to_add.append((source, target, key, dict(data), tf_rank))
 
-        #add the direct edges to list
-        else:
-            key = 'undirected_copy'
-            undirected_edges_to_add.append((target, source, key, dict(data)))
-
-
-
-    #need new cicle so that im not changing the structure of the graph during the cycle above:RuntimeError: dictionary changed size during iteration
+        #need new cicle so that im not changing the structure of the graph during the cycle above:RuntimeError: dictionary changed size during iteration
     for source, target, key, data, tf_rank in directed_edges_to_add:
         g.add_edge(source, target, key, **data)
 
@@ -139,20 +131,21 @@ def ckn_to_networkx(edgesPath, nodePath):
         #check which of the nodes is the TF. If none delete the edge
         source_is_tf = 'isTF' in g.nodes[source] and g.nodes[source]['isTF'] == 'TF'
         target_is_tf = 'isTF' in g.nodes[target] and g.nodes[target]['isTF'] == 'TF'
+        # Case 1: Source is TF, Target is not
         if source_is_tf and not target_is_tf:
             g[source][target][key]['id'] = f'{source} modulates the expression of {target}'
-            g[source][target][key]['arrows'] = {'to': {'enabled': True}}  # Arrow towards target (non-TF)
-            ''' ver se faz sentido visto ser direto
-            # Case 2: Target is TF, Source is not
-            elif target_is_tf and not source_is_tf:
-                g[target][source][key]['id'] = f'{target} modulates the expression of {source}'
-                g[target][source][key]['arrows'] = {'from': {'enabled': True}}  # Arrow towards source (non-TF)
+            g[source][target][key]['arrows'] = {'from': {'enabled': False}, 'to': {'enabled': True}}  # Arrow to non-TF
+
+        # Case 2: Target is TF, Source is not
+        elif target_is_tf and not source_is_tf:
+            g[source][target][key]['id'] = f'{target} modulates the expression of {source}'
+            g[source][target][key]['arrows'] = {'from': {'enabled': True}, 'to': {'enabled': False}}  # Still use the same edge
+
+        # Case 3: Both Source and Target are TFs
+        elif source_is_tf and target_is_tf:
+            g[source][target][key]['id'] = f'{source} and {target} modulate each other'
+            g[source][target][key]['arrows'] = {'to': {'enabled': True}, 'from': {'enabled': True}}
             
-            # Case 3: Both Source and Target are TFs
-            elif source_is_tf and target_is_tf:
-                g[source][target][key]['id'] = f'{source} and {target} modulate each other'
-                g[source][target][key]['arrows'] = {'to': {'enabled': True}, 'from': {'enabled': True}}
-            '''
         else:
             edges_to_remove.append((source, target, key))
 
@@ -162,12 +155,8 @@ def ckn_to_networkx(edgesPath, nodePath):
     for source, target, key in edges_to_remove:
         g.remove_edge(source, target, key=key)
     print('nmr of directed edges', len(directed_edges_to_add))
+    print('og nmr of edges', g.number_of_edges())
 
-    for target, source, key, data in undirected_edges_to_add:
-        g.add_edge(target, source, key, **data)
-        g[target][source][key]['hidden'] = True
-        g[target][source][key]['id'] = f'{target} interacts with {source}'
-        
 
         
     
