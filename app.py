@@ -97,8 +97,8 @@ def expand():
     elist = []
     for fr, to, k, attrs in potentialEdges:
         elist.append({
-                    'from': fr,
-                    'to': to,
+                    'from': attrs.get('source', fr),
+                    'to': attrs.get('target', to),
                     'id': attrs.get('id', ''),
                     'label': attrs.get('interaction', ''),
                     'interaction': attrs.get('interaction', ''),

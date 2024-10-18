@@ -134,12 +134,16 @@ def ckn_to_networkx(edgesPath, nodePath):
         # Case 1: Source is TF, Target is not
         if source_is_tf and not target_is_tf:
             g[source][target][key]['id'] = f'{source} modulates the expression of {target}'
-            g[source][target][key]['arrows'] = {'from': {'enabled': False}, 'to': {'enabled': True}}  # Arrow to non-TF
+            g[source][target][key]['arrows'] = {'from': {'enabled': False}, 'to': {'enabled': True}}
+            g[source][target][key]['source'] = source  # Add source metadata
+            g[source][target][key]['target'] = target  # Add target metadata
 
         # Case 2: Target is TF, Source is not
         elif target_is_tf and not source_is_tf:
             g[source][target][key]['id'] = f'{target} modulates the expression of {source}'
-            g[source][target][key]['arrows'] = {'from': {'enabled': True}, 'to': {'enabled': False}}  # Still use the same edge
+            g[source][target][key]['arrows'] = {'from': {'enabled': True}, 'to': {'enabled': False}}  
+            g[source][target][key]['source'] = target  # Add source metadata
+            g[source][target][key]['target'] = source  # Add target metadata
 
         # Case 3: Both Source and Target are TFs
         elif source_is_tf and target_is_tf:

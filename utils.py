@@ -161,32 +161,38 @@ def expand_nodes(g, nodes, all_shown_nodes, tf_ranks, slideRange_co_exp):
     node = nodes[0]
     ug = nx.MultiGraph(g.copy())
 
-    # find also neighbours on the second level to connect to the rest of the graph (if possible)
+    # Find neighbors of the selected node(s)
     all_neighbours = set(nodes)
     fromnodes = nodes
     for i in range(1):
-        neighbours = set(itertools.chain.from_iterable([g.neighbors(node) for node in fromnodes]))  # - set(fromnodes)
+        neighbours = set(itertools.chain.from_iterable([g.neighbors(n) for n in fromnodes]))
         if not neighbours:
             break
         all_neighbours.update(neighbours)
         fromnodes = neighbours
 
-    potentialEdges = []
-    #try pairs for each combination of all_neighbours and all_shown_nodes (excluding the original nodes)
-    for fr, to in [(a, b) for a in set(all_neighbours)-set(nodes) for b in set(all_shown_nodes)-set(nodes)]:
-        print('considering: ', fr, to)
-        if g.has_edge(fr, to):
-            edges = g.get_edge_data(fr, to)
-            for k in edges:
-                potentialEdges.append((fr, to, k, edges[k]))
-        elif g.has_edge(to, fr):
-            edges = g.get_edge_data(to, fr)
-            for k in edges:
-                potentialEdges.append((to, fr, k, edges[k]))
-
-    potentialEdges = g.subgraph(all_neighbours).edges(keys=True, data=True)
+    # Filter the subgraph based on tf_ranks and slideRange_co_exp using filter_edges_nodes
+    filtered_subgraph = ug.subgraph([node] + list(all_neighbours)).copy()
     
-    return g.subgraph([node] + list(ug.neighbors(node))), potentialEdges
+    # Apply the filter_edges_nodes function to filter edges and nodes
+    filter_edges_nodes(filtered_subgraph, query_nodes=[node], tf_ranks=tf_ranks, rangeSlider_co_exp=slideRange_co_exp)
+
+    potentialEdges = []
+
+    # Find potential edges after filtering
+    for fr, to in [(a, b) for a in set(all_neighbours) - set(nodes) for b in set(all_shown_nodes) - set(nodes)]:
+        print('considering: ', fr, to)
+        if filtered_subgraph.has_edge(fr, to):
+            edges = filtered_subgraph.get_edge_data(fr, to)
+            for k, attrs in edges.items():
+                potentialEdges.append((fr, to, k, attrs))
+        elif filtered_subgraph.has_edge(to, fr):
+            edges = filtered_subgraph.get_edge_data(to, fr)
+            for k, attrs in edges.items():
+                potentialEdges.append((to, fr, k, attrs))
+
+    # Return the subgraph and potential edges
+    return filtered_subgraph, potentialEdges
 
 def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
     groups_json = {'CKN node': {'shape': 'box',
@@ -260,8 +266,8 @@ def graph2json(g, query_nodes=[], min_width = 1, max_width = 15):
                     })'''
         
         elist.append({
-                    'from': fr,
-                    'to': to,
+                    'from': attrs.get('source', fr),
+                    'to': attrs.get('target', to),
                     'id': attrs.get('id', ''),
                     'label': attrs.get('interaction', ''),
                     'interaction': attrs.get('interaction', ''),
