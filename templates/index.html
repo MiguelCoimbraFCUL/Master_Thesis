@@ -11,8 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/css/selectize.min.css" integrity="sha512-bkB9w//jjNUnYbUpATZQCJu2khobZXvLP5GZ8jhltg7P/dghIrTaSJ7B/zdlBUT0W/LXGZ7FfCIqNvXjWKqCYA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.13.3/js/standalone/selectize.min.js" integrity="sha512-pF+DNRwavWMukUv/LyzDyDMn8U2uvqYQdJN0Zvilr6DDo/56xPDZdDoyPDYZRSL4aOKO/FGKXTpzDyQJ8je8Qw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/voca/1.4.0/voca.min.js" integrity="sha512-yrLbujQF3UPLrlaavtewYmv7OFD8AGO5PS8jg0VKlXP8kW9POHaG/bbpwSbpkqe4SCXVwTtYAMsKdOukT11bxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/string-format/0.5.0/string-format.min.js" integrity="sha512-umUQjNj1rAebq5zbgyU2sFNEREC48ohuUAdAwTa1qbEibzzbTnJLhj8ASNNsoKkWQ3ef+QjtZvGgVWJulLetxQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -36,8 +39,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js" integrity="sha512-iTgTmIgxyA2YehKNVbzLJx4j9SnuC5ihtRrtxVkXH/9nF3vXBN5YeNQp+6wufBWKD3u+roHVNOvWBMufQnBbug==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- vis network -->
     <script src="https://cdn.jsdelivr.net/npm/verge@1.10.2/verge.min.js"></script> <!--verge-->
     
-    <div class="container-fluid">  
+    <div class="container-fluid"> 
+        <div class="navbar">
+            <a class="nav-link" href="/">&larr; Go Back</a>
+            <div class="navDropdown">
+                <button class="dropdown-toggle" onclick="navToggleDropdown()">Export</button>
+                <ul class="dropdown-menu" id="dropdownMenu">
+                    <li><a class="dropdown-item" href="#nodes">Nodes (.csv format)</a></li>
+                    <li><a class="dropdown-item" href="#edges">Edges (.csv format)</a></li>
+                    <li><a class="dropdown-item" href="#png">Network (.png format)</a></li>
+                </ul>
+            </div>
+        </div>
+           
         <div class="row">
+                    
+            
+
             <div class="col-xs-6 col-sm-5 col-md-5 col-lg-4 col-xl-3 col-xxl-3 border-end border-light border-2" id="configColumn">  
                 <div class="search-container">         
                     <h1><b>GENE SEARCH</b></h1>
@@ -48,9 +66,7 @@
                     </form>
                     <p class="example-text">ex: LOC112017778 LOC112008286</p>
                     <p class="example-text">ex: LOC111995138 LOC112009257 LOC112008346</p>
-                    <button class="toggle-btn" type="button" onclick="toggleLegend()">
-                        <img src="https://img.icons8.com/?size=100&id=100039&format=png&color=FFFFFF" alt="Legend" class="button-image">             
-                    </button>
+                    
                     <!--LEGEND-->
                     <div id="legend" class="legend">
                         <div class="legend-title">NETWORK LEGEND</div>
@@ -103,6 +119,9 @@
                     <input type="range" id="irpScoreRange" min="0" max="1" step="0.001" value="0" oninput="updateRangeValue(this.value)" onchange="filterByIrpScore(this.value)">
                     <span id="rangeValue">0.000</span>
                 </div>
+                <button class="toggle-btn" type="button" onclick="toggleLegend()">
+                    <img src="https://img.icons8.com/?size=100&id=100039&format=png&color=FFFFFF" alt="Legend" class="button-image">             
+                </button>
                  
             </div>
             <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9" id="networkViewContainer">  

@@ -1,3 +1,5 @@
+// prevents dialog closing immediately when page navigates
+vex.defaultOptions.closeAllOnPopState = false;
 
 var netviz = {
     nodes: undefined,
@@ -58,6 +60,16 @@ $(document).ready(function() {
             alert('Server error while loading node data.');
         }
     });
+    $('#dropdownMenu a').click(function(){
+        if ($(this).attr('href') == '#nodes') {
+            export_nodes();
+        }
+        else if ($(this).attr('href') == '#edges') {
+            export_edges();
+        } else if ($(this).attr('href') == '#png') {
+            export_network_png();}
+    });
+    
 
 
     // Event listener for the search button
@@ -104,12 +116,21 @@ $(document).ready(function() {
               disableSpinner();  // Hide loading spinner
               alert('Server error while loading the network.');
           },
+
     
     
     });
+    
+
+
     scale();
     initContextMenus();
+
+    
+    
+    
 });
+
 
 function drawNetwork(graphData){
     console.log("Graph Data Received:", graphData);
@@ -613,7 +634,118 @@ function filterByIrpScore(minIrpScore = 0) {
     rangeSliderValue = minIrpScore
 }
 
+function export_nodes() {
+    console.log("Export nodes function called."); 
+    if(netviz.nodes==undefined) {
+        vex.dialog.alert('No nodes to export! You need to do a search first.');
+        return;
+    }
 
+    var data = [['Arabidopsis_concise_gene', 'Arabidopsis_gene', 'AverageShortestPathLength', 'BetweennessCentrality', 'ClosenessCentrality', 'Degree', 'Eccentricity', 'Flow', 'isDEG', 'IsSingleNode', 'isTF', 'isTR', 'name', 'NeighborhoodConnectivity', 'NumberOfDirectedEdges', 'NumberOfUndirectedEdges', 'Radiality', 'SelfLoops', 'Stress', 'TopologicalCoefficient']];
+    netviz.nodes.forEach(function(node, id){
+        var line = new Array;
+
+        ['Arabidopsis_concise_gene', 'Arabidopsis_gene', 'AverageShortestPathLength', 'BetweennessCentrality', 'ClosenessCentrality', 'Degree', 'Eccentricity', 'Flow', 'isDEG', 'IsSingleNode', 'isTF', 'isTR', 'name', 'NeighborhoodConnectivity', 'NumberOfDirectedEdges', 'NumberOfUndirectedEdges', 'Radiality', 'SelfLoops', 'Stress', 'TopologicalCoefficient'].forEach(function(aname){
+            let atr = node[aname];
+            if (atr != undefined)
+                line.push(format_cell(atr));
+            else
+                line.push('');
+        })
+        data.push(line);
+    })
+
+    var datalines = new Array;
+    data.forEach(function(line_elements){
+        datalines.push(line_elements.join(','));
+    })
+    var csv = datalines.join('\n')
+
+    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+    saveAs(blob, "nodes.csv");
+}
+
+
+function export_edges(){
+    console.log("Export edges function called."); 
+    if(netviz.edges==undefined) {
+        vex.dialog.alert('No edges to export! You need to do a search first.');
+        return;
+    }
+
+    var data = [['source','target','ConnecTF_Target','EdgeBetweenness','interaction','irp_score','cis_elements']];
+    netviz.edges.forEach(function(edge, id){
+        var line = new Array;
+
+        ['source','target','ConnecTF_Target','EdgeBetweenness','interaction','irp_score','cis_elements'].forEach(function(aname){
+            let atr = edge[aname];
+            if (atr != undefined)
+                line.push(format_cell(atr));
+            else
+                line.push('');
+        })
+
+        data.push(line);
+    })
+
+    var datalines = new Array;
+    data.forEach(function(line_elements){
+        datalines.push(line_elements.join(','));
+    })
+    var csv = datalines.join('\n');
+
+    var blob = new Blob([csv], {type: "text/csv;charset=utf-8"});
+    saveAs(blob, "edges.csv");
+}
+
+function export_network_png() {
+    
+    if (!netviz || !netviz.network) {
+        vex.dialog.alert('No network to export! You need to do a search first.');
+        return;
+    }
+    netviz.network.fit();
+    // Give some time for the zoom effect to complete before capturing the canvas
+    setTimeout(function() {
+        // Get the canvas element inside the div with class 'vis_network'
+        
+        var canvas = document.querySelector('.vis-network canvas');
+        
+        if (canvas) {
+            // Convert the canvas to a data URL (base64 encoded PNG)
+            var dataURL = canvas.toDataURL("image/png");
+
+            // Create a temporary link element to download the PNG
+            var link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'network.png';  // Filename of the exported PNG
+            document.body.appendChild(link); // Append link to the body
+            link.click(); // Trigger download
+            document.body.removeChild(link); // Remove the link after download
+        } else {
+            vex.dialog.alert('No network canvas found!');
+            return;
+        }
+    }, 500);
+}
+
+function navToggleDropdown() {
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    dropdownMenu.classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function(event) {
+    if (!event.target.matches('.dropdown-toggle')) {
+        const dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (let i = 0; i < dropdowns.length; i++) {
+            const openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+};
 
 
 
