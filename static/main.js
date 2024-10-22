@@ -18,6 +18,7 @@ var select = null;
 var selectedRanks = new Set();
 var rangeSliderValue = 0
 
+var validNodes = []
 
 //format.extend (String.prototype, {});
 
@@ -67,7 +68,10 @@ $(document).ready(function() {
         else if ($(this).attr('href') == '#edges') {
             export_edges();
         } else if ($(this).attr('href') == '#png') {
-            export_network_png();}
+            export_network_png();
+        } else if ($(this).attr('href') == '#report') {
+            generate_report();
+        }
     });
     
 
@@ -78,7 +82,7 @@ $(document).ready(function() {
         console.log('ranks', selectedRanks)
         const userInput = $('input[name="query"]').val().trim();
         const queryNodes = userInput.split(/\s+/);  // Split by space
-        const validNodes = queryNodes.filter(node => node in node_search_data_dict);  // Check valid nodes
+        validNodes = queryNodes.filter(node => node in node_search_data_dict);  // Check valid nodes
         const invalidNodes = queryNodes.filter(node => !(node in node_search_data_dict));  // Check invalid nodes
 
         
@@ -102,7 +106,7 @@ $(document).ready(function() {
           type: "POST",
           contentType: 'application/json; charset=utf-8',
           processData: false,
-          data: JSON.stringify({'nodes': validNodes,
+          data: JSON.stringify({'nodes': Array.from(validNodes),
                                 'ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
                                 'rangeSliderValue': parseFloat(rangeSliderValue)
 
@@ -138,6 +142,8 @@ function drawNetwork(graphData){
 
     netviz.nodes = new vis.DataSet(graphData.network.nodes);
     netviz.edges = new vis.DataSet(graphData.network.edges);
+    netviz.nodes.forEach()
+    
     // create a network
     var container = document.getElementById('networkView');
 
@@ -727,6 +733,48 @@ function export_network_png() {
             return;
         }
     }, 500);
+}
+
+function generate_report(){
+    if(netviz.edges==undefined || netviz.nodes==undefined) {
+        vex.dialog.alert('No data to create a report yet! You need to do a search first.');
+        return;
+    }
+    $.ajax({
+        url: '/report',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: '',
+        data: JSON.stringify({'quried_nodes': Array.from(validNodes),
+                              'tf_ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
+                              'rangeSliderValue': parseFloat(rangeSliderValue)
+        }),
+        xhrFields: {
+            responseType: 'blob' // Set the response type to blob
+        },
+        success: function( data, textStatus, jQxhr ){
+            disableSpinner();  // Hide loading spinner
+            const url = window.URL.createObjectURL(data);
+            const link = document.createElement('a');
+            link.href = url;
+
+            const baseFileName = 'gene_relation_report';
+            const nodeNames = validNodes.join('_'); 
+            const pdfFileName = `${baseFileName}_${nodeNames}.pdf`;
+
+            link.download = pdfFileName; // Set the dynamic file name
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url); // Clean up
+        },
+        error: function(jqXhr, textStatus, errorThrown) {
+            disableSpinner();  // Hide loading spinner
+            console.error('Error generating report:', errorThrown);
+            vex.dialog.alert('Server error while generating the report.');
+        }
+  });
+
 }
 
 function navToggleDropdown() {
