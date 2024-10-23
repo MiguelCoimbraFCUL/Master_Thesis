@@ -90,6 +90,10 @@ def generate_report():
         quried_nodes = set(data['quried_nodes']) # validNodes
         tf_ranks = list(data['tf_ranks'])
         rangeSliderValue = data['rangeSliderValue']
+        nodes_dict = data['nodes']
+        edges_dict = data['edges']
+
+        
 
         #generate pdf
         pdf = PDFReport(quried_nodes)
@@ -100,6 +104,8 @@ def generate_report():
         # Add content to PDF
         pdf.add_summary(rangeSliderValue, tf_ranks)
         pdf.add_legend()
+        pdf.add_edges_table(edges_dict)
+        pdf.add_nodes_table(nodes_dict)
         pdf.output(pdf_file_path)
         pdf_bytes = BytesIO()
         byte_string = pdf.output(dest='S')  # Write PDF content to the BytesIO stream

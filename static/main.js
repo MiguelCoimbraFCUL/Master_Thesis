@@ -142,8 +142,6 @@ function drawNetwork(graphData){
 
     netviz.nodes = new vis.DataSet(graphData.network.nodes);
     netviz.edges = new vis.DataSet(graphData.network.edges);
-    netviz.nodes.forEach()
-    
     // create a network
     var container = document.getElementById('networkView');
 
@@ -740,6 +738,29 @@ function generate_report(){
         vex.dialog.alert('No data to create a report yet! You need to do a search first.');
         return;
     }
+    // Create a new dictionary to store only edge data
+    const edge_data_dict = {};
+    const node_data_dict = {};
+
+    for (const key in netviz.nodes) {
+        const value = netviz.nodes[key];
+    
+    // Check if the value is an object and contains 'from' and 'to', which are edge-specific properties
+    if (value && typeof value === 'object' && value.hasOwnProperty('isTF') && value.hasOwnProperty('id')) {
+        // Add the key and value to the new dictionary
+        node_data_dict[key] = value;
+    }
+    }
+    // Loop through the original dictionary
+    for (const key in netviz.edges) {
+        const value = netviz.edges[key];
+    
+    // Check if the value is an object and contains 'from' and 'to', which are edge-specific properties
+    if (value && typeof value === 'object' && value.hasOwnProperty('from') && value.hasOwnProperty('to')) {
+        // Add the key and value to the new dictionary
+        edge_data_dict[key] = value;
+    }
+    }
     $.ajax({
         url: '/report',
         type: 'POST',
@@ -747,7 +768,9 @@ function generate_report(){
         dataType: '',
         data: JSON.stringify({'quried_nodes': Array.from(validNodes),
                               'tf_ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
-                              'rangeSliderValue': parseFloat(rangeSliderValue)
+                              'rangeSliderValue': parseFloat(rangeSliderValue),
+                              'nodes': node_data_dict,
+                              'edges': edge_data_dict
         }),
         xhrFields: {
             responseType: 'blob' // Set the response type to blob
