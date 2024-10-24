@@ -7,6 +7,8 @@ from flask_cors import CORS, cross_origin
 from pdfReport import PDFReport
 import os
 from io import BytesIO
+import base64
+from PIL import Image
 
 
 
@@ -92,8 +94,17 @@ def generate_report():
         rangeSliderValue = data['rangeSliderValue']
         nodes_dict = data['nodes']
         edges_dict = data['edges']
+        network_image_base64 = data['network_image']
 
-        
+
+        if network_image_base64:
+            # Decode the Base64 string to bytes
+            network_image_data = base64.b64decode(network_image_base64.split(",")[1])
+            # Convert to PIL Image for use in the PDF
+            image = Image.open(BytesIO(network_image_data))
+            #temporary mkdir so that i can add the pic
+            image_path = '/tmp/network_image.png'
+            image.save(image_path)
 
         #generate pdf
         pdf = PDFReport(quried_nodes)
@@ -106,8 +117,8 @@ def generate_report():
         pdf.add_legend()
         pdf.add_edges_table(edges_dict)
         pdf.add_nodes_table(nodes_dict)
+        pdf.addImage(image_path)
         pdf.output(pdf_file_path)
-        pdf_bytes = BytesIO()
         byte_string = pdf.output(dest='S')  # Write PDF content to the BytesIO stream
         stream = BytesIO(byte_string)
         stream.seek(0)  # Move cursor to the start of the stream
@@ -150,6 +161,7 @@ def expand():
     # write potential edges in JSON
     elist = []
     for fr, to, k, attrs in potentialEdges:
+        
         elist.append({
                     'from': attrs.get('source', fr),
                     'to': attrs.get('target', to),
@@ -163,13 +175,19 @@ def expand():
                     'width': attrs.get('width', 1),  
                     'directed': attrs.get('directed', 'no'),
                     'arrows': attrs.get('arrows', 'undefined'),
-                    'hidden': attrs.get('hidden', False) 
+                    'hidden': attrs.get('hidden', False)
+
                 })
     json_data = graph2json(subgraph)
     json_data['network']['potential_edges'] = elist
 
-    print(len(subgraph), len(potentialEdges))
-    print(potentialEdges)
+    '''print('len subgraph', len(subgraph.edges()), 'len potential edges',len(potentialEdges))
+    print('-----------')
+    print('subgraph edges',subgraph.edges())
+    print('subgraph nodes',subgraph.nodes())
+
+    print('-----------')
+    print(potentialEdges)'''
     return json_data
 
 

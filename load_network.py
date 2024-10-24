@@ -6,7 +6,7 @@ import math
 from load_network_utils import detect_delimiter, detect_delimiter_compressed
 
 
-def ckn_to_networkx(edgesPath, nodePath):
+def ckn_to_networkx(edgesPath, nodePath, min_width = 1, max_width = 10):
     '''
     Requires: 1st line of edgesFile must be the header
     csv
@@ -87,6 +87,8 @@ def ckn_to_networkx(edgesPath, nodePath):
     
     directed_edges_to_add = []
     edges_to_remove = []
+    #dict tf_rank : edge width
+ 
     for source, target, data in g.edges(data=True):
 
         #stripping interaction data
@@ -119,6 +121,12 @@ def ckn_to_networkx(edgesPath, nodePath):
             directed_edges_to_add.append((source, target, key, dict(data), tf_rank))
 
         #need new cicle so that im not changing the structure of the graph during the cycle above:RuntimeError: dictionary changed size during iteration
+    tf_width_dict = {
+        0: 6,
+        1: 8,
+        2: 10,
+        3: 12
+        }
     for source, target, key, data, tf_rank in directed_edges_to_add:
         g.add_edge(source, target, key, **data)
 
@@ -152,7 +160,12 @@ def ckn_to_networkx(edgesPath, nodePath):
             
         else:
             edges_to_remove.append((source, target, key))
+        
 
+        
+        
+        
+        
         
 
     #removing
@@ -160,6 +173,22 @@ def ckn_to_networkx(edgesPath, nodePath):
         g.remove_edge(source, target, key=key)
     print('nmr of directed edges', len(directed_edges_to_add))
     print('og nmr of edges', g.number_of_edges())
+
+    for fr, to, key, attrs in g.edges(keys=True, data=True):
+        
+        #co_exp edges
+        if key != 'directed':
+            #scaling the width by the irp_score in a defined interval
+            width = min_width + (float(attrs['irp_score']) * (max_width - min_width))
+            attrs['width'] = width
+        
+        #directed edges
+        else:
+            #width of directed edges by the dict
+            if 'tf_rank' in attrs: 
+                tf_rank = attrs['tf_rank']
+                if tf_rank in tf_width_dict:
+                    attrs['width'] = tf_width_dict[tf_rank]
 
 
         

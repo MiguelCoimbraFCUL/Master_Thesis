@@ -53,7 +53,7 @@ class PDFReport(FPDF):
     
 
     def add_edges_table(self, edges_dict):
-        col_widths = [70, 25, 25, 20, 15, 15]  
+        col_widths = [80, 25, 25, 20, 15, 15]  
         total_width = sum(col_widths)  # Total width of the table
         # Calculate X position to center the table
         page_width = 210  
@@ -82,11 +82,12 @@ class PDFReport(FPDF):
             if edge_data['directed'] == 'no':
                 source = '--'
                 target = '--'
+                irp_score = str(edge_data['irp_score'])
             else:
                 source = edge_data['from']
                 target = edge_data['to']
+                irp_score = '--'
             edge_id = key  # The key itself is the edge ID
-            irp_score = str(edge_data['irp_score'])
             tf_rank = str(edge_data['tf_rank'])
             directed = edge_data['directed']
             
@@ -104,7 +105,7 @@ class PDFReport(FPDF):
         self.ln(8)
 
     def add_nodes_table(self, nodes_dict):
-        col_widths = [50, 25, 20, 20]  # Adjust the widths as needed
+        col_widths = [50, 40, 20, 20]  # Adjust the widths as needed
         total_width = sum(col_widths)  # Total width of the table
 
         # Calculate X position to center the table
@@ -153,8 +154,16 @@ class PDFReport(FPDF):
             #self.cell(col_widths[4], 7, annotations, border=1)
             self.ln()
 
-        self.ln(8)  # Add some space after the table
+        self.add_page() # Add some space after the table
 
+    def addImage(self, path, h=150):
+        self.set_font('Helvetica', 'B', 12)  # Use Helvetica
+        self.cell(0, 2, 'Network Image', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+        # Add your image, scale it down to fit
+        self.image(path, h=h, x=0, alt_text='Network screenshot')
+        self.ln(2)
+        self.set_font('Helvetica', '', 8)  # Use Helvetica
+        self.cell(0, 2, 'If the image is not ideal procede to download it directly in the web app! Thank You!', new_x=XPos.LMARGIN, new_y=YPos.NEXT)
 
 
 #generate PDF
@@ -169,14 +178,4 @@ pdf.add_legend()
 pdf.add_nodes_table(node_dict)
 
 pdf.output('gene_relation_report.pdf')
-'''
-
-'''
-required:
-
-quried_genes
-iprscore rank
-tfrank
-
-
 '''

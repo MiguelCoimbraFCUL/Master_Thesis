@@ -398,9 +398,7 @@ function edge_present(edges, newEdge) {
 
     try {
         edges.forEach((oldEdge, i) => {
-            if (newEdge.from == oldEdge.from &&
-                newEdge.to == oldEdge.to &&
-                newEdge.label == oldEdge.label) {
+            if (newEdge.id == oldEdge.id) {
                     is_present = true;
                     throw BreakException; // break is not available in forEach
                 }
@@ -445,18 +443,21 @@ function expandNode(nid) {
                     // console.log('Already present ' + item.id + item.label)
                 }
             })
-
+            
             data.network.edges.forEach((newEdge, i) => {
                 if(!edge_present(netviz.edges, newEdge)) {
                     postprocess_edge(newEdge);
                     netviz.edges.add(newEdge);
+                    console.log('AQUI1')
                     newCounter += 1;
                 }
             })
 
             data.network.potential_edges.forEach((edge, i) => {
                 if(!edge_present(netviz.edges, edge)) {
+                    postprocess_edge(edge);
                     netviz.edges.add(edge);
+                    console.log('AQUI2')
                     newCounter += 1;
                 }
             })
@@ -465,6 +466,7 @@ function expandNode(nid) {
                 vex.dialog.alert('No nodes or edges can be added.');
             }
         }
+        
     },
     error: function( jqXhr, textStatus, errorThrown ){
         alert('Server error while loading node data.');
@@ -718,7 +720,6 @@ function export_network_png() {
         if (canvas) {
             // Convert the canvas to a data URL (base64 encoded PNG)
             var dataURL = canvas.toDataURL("image/png");
-
             // Create a temporary link element to download the PNG
             var link = document.createElement('a');
             link.href = dataURL;
@@ -733,71 +734,84 @@ function export_network_png() {
     }, 500);
 }
 
-function generate_report(){
-    if(netviz.edges==undefined || netviz.nodes==undefined) {
+function generate_report() {
+    if (netviz.edges === undefined || netviz.nodes === undefined) {
         vex.dialog.alert('No data to create a report yet! You need to do a search first.');
         return;
     }
-    // Create a new dictionary to store only edge data
-    const edge_data_dict = {};
-    const node_data_dict = {};
-
-    for (const key in netviz.nodes) {
-        const value = netviz.nodes[key];
     
-    // Check if the value is an object and contains 'from' and 'to', which are edge-specific properties
-    if (value && typeof value === 'object' && value.hasOwnProperty('isTF') && value.hasOwnProperty('id')) {
-        // Add the key and value to the new dictionary
-        node_data_dict[key] = value;
-    }
-    }
-    // Loop through the original dictionary
-    for (const key in netviz.edges) {
-        const value = netviz.edges[key];
+    console.log('Current netviz.edges:', netviz.edges.get());
+    console.log('netviz.nodes', netviz.nodes.get());
     
-    // Check if the value is an object and contains 'from' and 'to', which are edge-specific properties
-    if (value && typeof value === 'object' && value.hasOwnProperty('from') && value.hasOwnProperty('to')) {
-        // Add the key and value to the new dictionary
-        edge_data_dict[key] = value;
-    }
-    }
-    $.ajax({
-        url: '/report',
-        type: 'POST',
-        contentType: 'application/json; charset=utf-8',
-        dataType: '',
-        data: JSON.stringify({'quried_nodes': Array.from(validNodes),
-                              'tf_ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
-                              'rangeSliderValue': parseFloat(rangeSliderValue),
-                              'nodes': node_data_dict,
-                              'edges': edge_data_dict
-        }),
-        xhrFields: {
-            responseType: 'blob' // Set the response type to blob
-        },
-        success: function( data, textStatus, jQxhr ){
-            disableSpinner();  // Hide loading spinner
-            const url = window.URL.createObjectURL(data);
-            const link = document.createElement('a');
-            link.href = url;
+    netviz.network.fit();
+    
+    setTimeout(function() {
+        // Create new dictionaries to store only edge and node data
+        const edge_data_dict = {};
+        const node_data_dict = {};
 
-            const baseFileName = 'gene_relation_report';
-            const nodeNames = validNodes.join('_'); 
-            const pdfFileName = `${baseFileName}_${nodeNames}.pdf`;
+        // Loop through the nodes using the get() method
+        netviz.nodes.get().forEach(node => {
+            // Check if the node object contains 'isTF' and 'id'
+            if (node && typeof node === 'object' && node.hasOwnProperty('isTF') && node.hasOwnProperty('id')) {
+                // Add the node's id as the key and the node itself as the value to the dictionary
+                node_data_dict[node.id] = node;
+            }
+        });
 
-            link.download = pdfFileName; // Set the dynamic file name
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url); // Clean up
-        },
-        error: function(jqXhr, textStatus, errorThrown) {
-            disableSpinner();  // Hide loading spinner
-            console.error('Error generating report:', errorThrown);
-            vex.dialog.alert('Server error while generating the report.');
-        }
-  });
+        // Loop through the edges using the get() method
+        netviz.edges.get().forEach(edge => {
+            // Check if the edge object contains 'from' and 'to'
+            if (edge && typeof edge === 'object' && edge.hasOwnProperty('from') && edge.hasOwnProperty('to')) {
+                // Add the edge's id as the key and the edge itself as the value to the dictionary
+                edge_data_dict[edge.id] = edge;
+            }
+        });
 
+        // Capture the network image
+        var canvas = document.querySelector('.vis-network canvas');
+        var dataURL = canvas.toDataURL("image/png");
+
+        // Send the data to the server
+        $.ajax({
+            url: '/report',
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            dataType: '',
+            data: JSON.stringify({
+                'quried_nodes': Array.from(validNodes),
+                'tf_ranks': Array.from(selectedRanks),  // Convert Set to Array before sending
+                'rangeSliderValue': parseFloat(rangeSliderValue),
+                'nodes': node_data_dict,
+                'edges': edge_data_dict,
+                'network_image': dataURL
+            }),
+            xhrFields: {
+                responseType: 'blob' // Set the response type to blob
+            },
+            success: function(data, textStatus, jQxhr) {
+                disableSpinner();  // Hide loading spinner
+                const url = window.URL.createObjectURL(data);
+                const link = document.createElement('a');
+                link.href = url;
+
+                const baseFileName = 'gene_relation_report';
+                const nodeNames = Array.from(validNodes).join('_'); 
+                const pdfFileName = `${baseFileName}_${nodeNames}.pdf`;
+
+                link.download = pdfFileName; // Set the dynamic file name
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url); // Clean up
+            },
+            error: function(jqXhr, textStatus, errorThrown) {
+                disableSpinner();  // Hide loading spinner
+                console.error('Error generating report:', errorThrown);
+                vex.dialog.alert('Server error while generating the report.');
+            }
+        });
+    }, 500);
 }
 
 function navToggleDropdown() {
