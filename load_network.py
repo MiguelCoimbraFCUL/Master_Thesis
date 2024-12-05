@@ -1,9 +1,9 @@
 from pathlib import Path
 import gzip
+import csv
 import pandas as pd
 import networkx as nx
 import math
-from load_network_utils import detect_delimiter, detect_delimiter_compressed
 
 
 def ckn_to_networkx(edgesPath, nodePath, min_width = 1, max_width = 10):
@@ -81,7 +81,7 @@ def ckn_to_networkx(edgesPath, nodePath, min_width = 1, max_width = 10):
     print(node_df.head())  # Displays the first 5 rows by default
     node_df.set_index('name', inplace = True)
 
-    #turn db into a dict where the keys are the names and the values are the rest of the information
+    #turn data frame into a dict where the keys are the names and the values are the rest of the information
     nx.set_node_attributes(g, node_df.to_dict('index'))
     
     
@@ -216,6 +216,22 @@ def ckn_to_networkx(edgesPath, nodePath, min_width = 1, max_width = 10):
         isolates = list(nx.isolates(g))
         g.remove_nodes_from(isolates)'''    
     return g
+
+def detect_delimiter(file_path):
+    with open(file_path, 'r') as file:
+        sample = file.read(2048)  # Read a sample of the file
+        sniffer = csv.Sniffer()
+        delimiter = sniffer.sniff(sample).delimiter
+        file.close()
+    return delimiter
+
+def detect_delimiter_compressed(file_path):
+    with gzip.open(file_path, 'rt') as file:  # Open the .gz file in text mode
+        sample = file.read(2048)  # Read a sample of the file
+        sniffer = csv.Sniffer()
+        delimiter = sniffer.sniff(sample).delimiter
+    return delimiter
+
 
 
             
