@@ -4,11 +4,16 @@
 
 # ./fasterq_dump.sh Bioproject_accession
 #------------------------------------------------------------------------------
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+BIN_DIR="$(cd "$(dirname "$0")/../../bin" && pwd)"
+
+
 # Path to the program fasterq-dump
-export PATH=$PATH:$HOME/sratoolkit.3.1.1-ubuntu64/bin
+SRA_TOOLKIT_DIR="$BASE_DIR/../bin/sratoolkit.3.1.1-ubuntu64/bin"
+export PATH=$PATH:"$BIN_DIR/sratoolkit.3.1.1-ubuntu64/bin"
 
 # Base directory for BioProjects
-BASE_DIR="$HOME/data/"
+
 # Check if the BioProject name is provided as an argument
 if [ -z "$1" ]; then
     # If not provided, prompt the user
@@ -26,7 +31,7 @@ if [ ! -d "$BIOPROJECT_DIR" ]; then
     exit 1
 fi
 
-SRR_LIST="$HOME/data/bioProjects_info/$BIOPROJECT.txt"
+SRR_LIST="$BASE_DIR/bioProjects_info/$BIOPROJECT.txt"
 if [ ! -f "$SRR_LIST" ]; then
     echo "Error: SRR list file '$SRR_LIST' not found."
     exit 1

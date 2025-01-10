@@ -9,21 +9,24 @@ RAW_READS_SUMMARY="$1"
 FORMAT="$2"
 BIOPROJECT="$3"
 
-printf "Assigned Reads \n" > $HOME/data/$BIOPROJECT/logs/a.csv
-printf "Unassigned Reads \n" > $HOME/data/$BIOPROJECT/logs/u.csv
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+
+printf "Assigned Reads \n" > $BASE_DIR/$BIOPROJECT/logs/a.csv
+printf "Unassigned Reads \n" > $BASE_DIR/$BIOPROJECT/logs/u.csv
 
 n_assigned_r=$(grep "Assigned" $RAW_READS_SUMMARY | grep -o '[[:digit:]]*')
 n_unassigned_r=$(grep "Unassigned_NoFeatures" $RAW_READS_SUMMARY | grep -o '[[:digit:]]*')
 
 if [ "$FORMAT" == "pe" ]; then 
     n_assigned_r=$(($n_assigned_r*2))
-    n_unassigned_r=$((n_unassigned_r*2))
+    n_unassigned_r=$(($n_unassigned_r*2))
 fi
 
-echo "$n_assigned_r" >> $HOME/data/$BIOPROJECT/logs/a.csv
-echo "$n_unassigned_r" >> $HOME/data/$BIOPROJECT/logs/u.csv
+echo "$n_assigned_r" >> $BASE_DIR/$BIOPROJECT/logs/a.csv
+echo "$n_unassigned_r" >> $BASE_DIR/$BIOPROJECT/logs/u.csv
 
-paste $HOME/data/$BIOPROJECT/logs/a.csv $HOME/data/$BIOPROJECT/logs/u.csv > $HOME/data/$BIOPROJECT/logs/featureCounts_log.csv
+paste $BASE_DIR/$BIOPROJECT/logs/a.csv $BASE_DIR/$BIOPROJECT/logs/u.csv > $BASE_DIR/$BIOPROJECT/logs/featureCounts_log.csv
 
-rm $HOME/data/$BIOPROJECT/logs/a.csv
-rm $HOME/data/$BIOPROJECT/logs/u.csv
+rm $BASE_DIR/$BIOPROJECT/logs/a.csv
+rm $BASE_DIR/$BIOPROJECT/logs/u.csv

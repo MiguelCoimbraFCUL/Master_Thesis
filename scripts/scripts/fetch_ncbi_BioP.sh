@@ -6,6 +6,10 @@
 
 # ./fetch_ncbi_BioP.sh or ./fetch_ncbi_BioP.sh 'Custom NCBI Query'
 #------------------------------------------------------------------------------
+
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
+
 # Define the default search query
 DEFAULT_QUERY='("Quercus suber"[Organism] AND "biomol rna"[Properties] AND ("platform bgiseq"[Properties] OR "platform illumina"[All Fields])'
 
@@ -18,9 +22,9 @@ else
     echo "Using default query."
 fi
 # Define the output file path
-mkdir -p $HOME/data/bioProjects_info
-OUTPUT_FILE_list="../bioProjects_info/COak_BioP_list.txt"
-OUTPUT_FILE_summary="../bioProjects_info/COak_BioP_summary.txt"
+mkdir -p $BASE_DIR/bioProjects_info
+OUTPUT_FILE_list="$BASE_DIR/bioProjects_info/COak_BioP_list.txt"
+OUTPUT_FILE_summary="$BASE_DIR/bioProjects_info/COak_BioP_summary.txt"
 
 
 # Check if the output file already exists, if not, fetch and save the bioProjects names
@@ -51,7 +55,7 @@ for BIOPROJECT in $(cat "$OUTPUT_FILE_list"); do
         echo "Title: $BIOPROJECT_TITLE" >> "$OUTPUT_FILE_summary"
 
 # Create a new file named after the BioProject (e.g., PRJNA347903.txt)
-        BIOPROJECT_FILE="../bioProjects_info/${BIOPROJECT}.txt"
+        BIOPROJECT_FILE="$BASE_DIR/bioProjects_info/${BIOPROJECT}.txt"
         > "$BIOPROJECT_FILE"  # Create or overwrite the file
         
 

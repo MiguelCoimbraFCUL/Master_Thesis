@@ -2,14 +2,19 @@
 #This script performs preprocessing on RNA-seq data by running FastQC and Trimmomatic tools. 
 #It processes single-end (SE) or paired-end (PE) reads, trimming low-quality sequences and running FastQC quality checks.
 
-# ./fasterq_dump.sh Bioproject__accession format('se' or 'pe')
+# ./preprocessing.sh Bioproject__accession format('se' or 'pe')
 #------------------------------------------------------------------------------
+
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+BIN_DIR="$(cd "$(dirname "$0")/../../bin" && pwd)"
 # Set paths to FastQC and Trimmomatic
-export PATH=$PATH:$HOME/FastQC
-trim_path="$HOME/Trimmomatic-0.39/trimmomatic-0.39.jar"
-adatpers_PE="$HOME/Trimmomatic-0.39/adapters/TruSeq3-PE.fa"
-adatpers_SE="$HOME/Trimmomatic-0.39/adapters/TruSeq3-SE.fa"
-BASE_DIR="$HOME/data"
+export PATH="$BIN_DIR/sratoolkit.3.1.1-ubuntu64/bin:$PATH"
+export PATH="$BIN_DIR/FastQC:$PATH"
+
+trim_path="$BIN_DIR/Trimmomatic-0.39/trimmomatic-0.39.jar"
+adatpers_PE="$BIN_DIR/Trimmomatic-0.39/adapters/TruSeq3-PE.fa"
+adatpers_SE="$BIN_DIR/bin/Trimmomatic-0.39/adapters/TruSeq3-SE.fa"
+
 
 
 
@@ -55,7 +60,7 @@ if [ ! -d "$BIOPROJECT_DIR" ]; then
     exit 1
 fi
 
-SAMPLES_FILE="$HOME/data/bioProjects_info/$BIOPROJECT.txt"
+SAMPLES_FILE="$BASE_DIR/bioProjects_info/$BIOPROJECT.txt"
 FASTQ_DIR="$BIOPROJECT_DIR/fastq"
 
 # Run FastQC for each sample
@@ -66,7 +71,7 @@ for fastqFile in "$FASTQ_DIR"/*; do
         echo "fastqc -t 6 -o $BASE_DIR/$BIOPROJECT/preprocessing/fastqc/raw $fastqFile"
         fastqc -t 6 -o "$BASE_DIR/$BIOPROJECT/preprocessing/fastqc/raw" "$fastqFile"
 
-    fi
+   fi
 done
 
 
@@ -76,12 +81,14 @@ if [ "$FORMAT" == "se" ]; then
         if [ -f "$fastqFile" ]; then
             sample=$(basename "$fastqFile" .fastq)
             echo "Starting Trimmomatic for $sample"
-            java -jar "$trim_path" SE \
+           java -jar "$trim_path" SE \
                 -threads 20 \
                 -trimlog "$BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$sample.log" \
                 "$fastqFile" \
                 "$BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$sample.filtered.fq.gz" \
                 ILLUMINACLIP:"$adatpers_SE":2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50
+
+            ./log_trim_reads.sh $BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$sample.log $FORMAT $BIOPROJECT $sample
         fi
     done
     # Second run of FastQC for the filtered reads
@@ -111,6 +118,8 @@ elif [ "$FORMAT" == "pe" ]; then
             "$sampleR2" \
             -baseout "$BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$SRR.filtered.fq.gz" \
             ILLUMINACLIP:"$adatpers_PE":2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:50
+
+        ./log_trim_reads.sh $BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$SRR.log $FORMAT $BIOPROJECT $SRR
            
     done < "$SAMPLES_FILE"
 
@@ -130,4 +139,3 @@ elif [ "$FORMAT" == "pe" ]; then
     done
 fi
 
-log_trim_reads.sh $BASE_DIR/$BIOPROJECT/preprocessing/hq_reads/$SRR.log $FORMAT $BIOPROJECT $SRR

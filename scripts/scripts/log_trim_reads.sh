@@ -4,6 +4,8 @@
 
 # ./log_trim_reads.sh $path_to_/$SRR.log format bioproject srr_accession
 #------------------------------------------------------------------------------
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+
 
 input_file="$1"
 format="$2"
@@ -25,7 +27,7 @@ process_single_end() {
     echo "Survival rate: $survival_rate%"
 
     # Log results to CSV
-    printf "%s\t%d\t%d\t%.5f\n" "$sample" "$total_reads" "$discarded_reads" "$survival_rate" >> "/$HOME/data/$bioP/logs/trimmomatic_log.csv"
+    printf "%s\t%d\t%d\t%.5f\n" "$sample" "$total_reads" "$discarded_reads" "$survival_rate" >> "/$BASE_DIR/$bioP/logs/trimmomatic_log.csv"
 }
 
 # Function for processing paired-end reads
@@ -50,7 +52,7 @@ process_paired_end() {
     echo "Survival rate: $survival_rate%"
 
     # Log results to CSV
-    printf "%s\t%d\t%d\t%.5f\n" "$sample" "$total_reads" "$discarded_reads" "$survival_rate" >> "/$HOME/data/$bioP/logs/trimmomatic_log.csv"
+    printf "%s\t%d\t%d\t%.5f\n" "$sample" "$total_reads" "$discarded_reads" "$survival_rate" >> "$BASE_DIR/$bioP/logs/trimmomatic_log.csv"
 }
 
 
