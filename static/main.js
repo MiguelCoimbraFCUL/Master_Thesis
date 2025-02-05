@@ -43,6 +43,7 @@ function disableSpinner() {
 // ajax request once the html is loaded to get node info
 $(document).ready(function() {
     // Fetch node data from the server
+    document.addEventListener('click', hideLegendOnClickOutside);
     
     $.ajax({
         url: "/get_node_data",
@@ -88,7 +89,7 @@ $(document).ready(function() {
         
         // If no valid nodes, show an error message
         if (validNodes.length === 0) {
-            alert('None of the input nodes correspond to valid Cork Oak names.');
+            alert('None of the input genes names correspond to valid Quercus Suber gene names.');
             return;
         }
     
@@ -150,9 +151,14 @@ function drawNetwork(graphData){
         nodes: netviz.nodes,
         edges: netviz.edges
     };
+    var totalNodes = netviz.nodes.length;
+
     console.log("netviz.nodes:", netviz.nodes);
-    console.log('netviz data', data)
+    console.log('netviz data', data);
+    console.log('size', getNodeSize(totalNodes));
+    console.log('total  nodes', totalNodes);
     //https://visjs.github.io/vis-network/docs/network/#options
+
     
     var options = {groups: graphData.groups,
                     interaction: {
@@ -183,9 +189,9 @@ function drawNetwork(graphData){
                         width: 2
                         },
                     nodes: {
-                        shape: 'circle',
+                        shape: 'hexagon',
                         color: '#c7bba9',
-                        widthConstraint: { maximum: 100},
+                        size: getNodeSize(totalNodes),
                         font: {
                             multi: 'html'
                         },
@@ -200,7 +206,7 @@ function drawNetwork(graphData){
                         barnesHut: {
                             gravitationalConstant: -18000,
                             centralGravity: 0.01,
-                            springLength: 200,
+                            springLength: 150,
                             springConstant: 0.16,
                             damping:  netviz.nodes.length > 100 ? 0.5 : 0.2,
                         },
@@ -208,7 +214,7 @@ function drawNetwork(graphData){
                             centralGravity: 0,
                             springLength: 150,
                             springConstant: 0.05,
-                            nodeDistance: 170,
+                            nodeDistance: 150,
                             damping: 0.1
                         },
                         stabilization: {
@@ -604,6 +610,17 @@ function toggleLegend() {
     }
 }
 
+// Function to hide the legend when clicking outside of it
+function hideLegendOnClickOutside(event) {
+    const button = document.getElementById('legend_button');
+    const legend = document.getElementById('legend');
+
+    // If the click is outside both the legend and the button, hide the legend
+    if (event.target !== button && !button.contains(event.target) && !legend.contains(event.target)) {
+        legend.style.display = 'none';
+    }
+}
+
 function format_cell(s){
     s = s.toString();
     s = s.trim();
@@ -833,6 +850,26 @@ window.onclick = function(event) {
 };
 
 
+// Function to calculate node size with 'var'
+function getNodeSize(nodeCount) {
+    var minNodes = 1;  // Minimum number of nodes
+    var maxNodes = 150;  // Maximum number of nodes
+    var minSize = 15;  // Minimum size of nodes
+    var maxSize = 50;  // Maximum size of nodes
+
+    if (nodeCount >= maxNodes) {
+        return minSize;  // Fixed to return the minimum size for large graphs
+    }
+    
+    if (nodeCount <= minNodes) {
+        return maxSize;  // Return maximum size for smallest graph
+    }
+    
+    // Proper scaling calculation
+    var scalingFactor = (maxNodes - nodeCount) / (maxNodes - minNodes);
+    var size = minSize + scalingFactor * (maxSize - minSize);
+    return size;
+}
 
 /*
 // filter page disappers if the click is not in the button or its components

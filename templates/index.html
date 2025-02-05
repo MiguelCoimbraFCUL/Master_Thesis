@@ -41,9 +41,9 @@
     
     <div class="container-fluid"> 
         <div class="navbar">
-            <a class="nav-link" href="/">&larr; Home</a>
+            <a class="nav-link" href="/"><span class="back-home">&#11013;</span> HOME</a>
             <div class="navDropdown">
-                <button class="dropdown-toggle" onclick="navToggleDropdown()">Export</button>
+                <button class="dropdown-toggle" onclick="navToggleDropdown()">EXPORT</button>
                 <ul class="dropdown-menu" id="dropdownMenu">
                     <li><a class="dropdown-item" href="#nodes">Nodes (.csv format)</a></li>
                     <li><a class="dropdown-item" href="#edges">Edges (.csv format)</a></li>
@@ -61,44 +61,21 @@
                 <div class="search-container">         
                     <h1><b>GENE SEARCH</b></h1>
                     <form class="search-form">
-                        <input type="text" name="query" class="searchbar" placeholder="Enter a node name term..." required >
+                        <input type="text" name="query" class="searchbar" placeholder="search for Q.Suber gene name(s)" required >
                         <button class="button" id="searchButton">SEARCH</button>
                         
                     </form>
                     <p class="example-text">ex: LOC112017778 LOC112008286</p>
                     <!--<p class="example-text">ex: LOC111995138 LOC112009257 LOC112008346</p>-->
                     
-                    <!--LEGEND-->
-                    <div id="legend" class="legend">
-                        <div class="legend-title">NETWORK LEGEND</div>
-                        <div class="legend-item-title">
-                            <span>NODES</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-shape circle-query"></div>
-                            <span> Node Searched</span>
-                        </div>
-
-                        <div class="legend-item">
-                            <div class="legend-shape circle"></div>
-                            <span> Regular Nodes</span>
-                        </div>
-                        
-                        <div class="legend-item">
-                            <div class="legend-shape box-tf"></div>
-                            <span>Transcription Factors</span>
-                        </div>
-                        
-                        <div class="legend-item">
-                            <div class="legend-shape box"></div>
-                            <span>Transcription Regulators</span>
-                        </div>
-                
-                    </div>
                 </div>
                 <!--filter-->
+                <fieldset class="filter-fieldset">
+                    <legend>FILTERS</legend>
+                    
+                  
                 <div class="dropdown">
-                    <button class="dropbtn" onclick="toggleDropdown()">Filter<img src="https://img.icons8.com/?size=100&id=40021&format=png&color=000000" alt="filter" class="btn-filter-image"></button>
+                    <button class="dropbtn" onclick="toggleDropdown()">Ranking Filter<img src="https://img.icons8.com/?size=100&id=40021&format=png&color=000000" alt="filter" class="btn-filter-image"></button>
                     <div id="dropdownContent" class="dropdown-content">
                         <label class="option">
                             <input type="checkbox" value="0" onclick="toggleRank(0)"> rank 0
@@ -115,14 +92,71 @@
 
                     </div>
                 </div>
+                <hr class="legend-divider">
                 <div class="slider-container">
                     <label for="irpScoreRange">Minimum IRP Score:</label>
                     <input type="range" id="irpScoreRange" min="0" max="1" step="0.001" value="0" oninput="updateRangeValue(this.value)" onchange="filterByIrpScore(this.value)">
                     <span id="rangeValue">0.000</span>
                 </div>
-                <button class="toggle-btn" type="button" onclick="toggleLegend()">
-                    <img src="https://img.icons8.com/?size=100&id=100039&format=png&color=FFFFFF" alt="Legend" class="button-image">             
-                </button>
+                </fieldset>
+
+                <fieldset class="legend-fieldset">
+                    <legend>LEGENDS & INFORMATIONS</legend>
+                <hr class="legend-divider">
+
+                <div class="legend-title">NETWORK LEGEND</div>
+                <div class="legend-container">
+                    
+                
+                    <div class="legend-content">
+                        <!-- NODES SECTION -->
+                        <div class="legend-column">
+                            <div class="legend-item-title">
+                                <span>NODES</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-shape circle-query"></div>
+                                <span>Node Searched</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-shape circle"></div>
+                                <span>Nodes</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-shape box-tf"></div>
+                                <span>Transcription Factors</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-shape box"></div>
+                                <span>Transcription Regulators</span>
+                            </div>
+                        </div>
+                
+                        <!-- EDGES SECTION -->
+                        <div class="legend-column">
+                            <div class="legend-item-title">
+                                <span>EDGES</span>
+                            </div>
+                            <div class="legend-item-e">          
+                                <span class="co-expression-edges">&#11013;</span> Direct edges
+                            </div>
+                            <div class="legend-item-e">
+                                <span><hr class="direct-edges"> Co-expression egdes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="legend-divider">
+                
+
+                <div class="legend-title">RANKS DESCRIPTION</div>
+                <div class="ranking-list"><strong>Rank 0:</strong> Co-expression related edges are shown.</div>
+                <div class="ranking-list"><strong>Rank 1:</strong> Direct edges found by ConnecTF are shown (to represent candidate TF-target relations based on data from model plants).</div>
+                <div class="ranking-list"><strong>Rank 2:</strong> Direct edges found by the presence of cis-elements in the target promoter (to represent candidate TF-target relations based on the presence of cis-elements for a given TF in the promoter region of genes).</div>
+                <div class="ranking-list"><strong>Rank 3:</strong> Direct edges present in both ConnecTF and cis-elements analysis are shown.</div>
+                
+            </fieldset>
                  
             </div>
             <div class="col-xs-6 col-sm-7 col-md-7 col-lg-8 col-xl-9 col-xxl-9" id="networkViewContainer">  

@@ -44,6 +44,6 @@ of cork oak
 
  
 
-### 2. Aggregation and preprocessing of RNA-seq expression data
+### 2. Gene co-expression Network
 
 
